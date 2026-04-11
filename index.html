@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0067A0">
+<title>Agafarma — Curva ABC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --az:#0067A0;--az2:#004e7c;--az3:#e8f4fb;
+  --am:#F6D50F;--am2:#c9ab00;
+  --ga:#17a34a;--ga2:#dcfce7;--ga3:#14532d;
+  --gb:#d97706;--gb2:#fef3c7;--gb3:#78350f;
+  --gc:#dc2626;--gc2:#fee2e2;--gc3:#7f1d1d;
+  --bg:#f0f5f9;--w:#fff;--brd:#e2e8f0;
+  --tx:#0f172a;--tx2:#64748b;--tx3:#94a3b8;
+  --r:12px;--r2:8px;--r3:20px;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 16px rgba(0,103,160,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+
+/* ── APP SHELL ─────────────────────── */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* ── HEADER ─────────────────────────── */
+.hdr{background:var(--az);padding:12px 16px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 2px 8px rgba(0,103,160,.4);flex-shrink:0;
+  padding-top:max(12px,env(safe-area-inset-top))}
+.hdr-logo{width:38px;height:38px;border-radius:50%;border:2px solid var(--am);overflow:hidden;flex-shrink:0}
+.hdr-logo img{width:100%;height:100%;object-fit:cover}
+.hdr-info{flex:1;min-width:0}
+.hdr-nome{font-size:14px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.hdr-sub{font-size:10px;color:rgba(255,255,255,.65);letter-spacing:.2px}
+.hdr-data{background:rgba(255,255,255,.15);border-radius:var(--r3);padding:4px 10px;font-size:10px;
+  color:rgba(255,255,255,.9);font-family:'JetBrains Mono',monospace;white-space:nowrap;flex-shrink:0}
+
+/* ── BOTTOM NAV ──────────────────────── */
+.bnav{background:var(--w);border-top:1px solid var(--brd);display:flex;
+  padding-bottom:max(8px,env(safe-area-inset-bottom));flex-shrink:0;box-shadow:0 -2px 12px rgba(0,0,0,.06)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 4px;border:none;background:none;cursor:pointer;color:var(--tx3);transition:color .15s;gap:3px}
+.bnav-btn.on{color:var(--az)}
+.bnav-ico{font-size:20px;line-height:1}
+.bnav-lbl{font-size:9px;font-weight:600;letter-spacing:.3px;font-family:'Sora',sans-serif}
+.bnav-dot{width:4px;height:4px;border-radius:50%;background:var(--az);margin-top:2px;opacity:0}
+.bnav-btn.on .bnav-dot{opacity:1}
+
+/* ── SCROLL AREA ─────────────────────── */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── PAGES ───────────────────────────── */
+.pg{display:none;padding:14px 14px 24px;animation:fadeIn .2s ease}
+.pg.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ───────────────────────────── */
+.card{background:var(--w);border-radius:var(--r);border:1px solid var(--brd);box-shadow:var(--sh);overflow:hidden;margin-bottom:12px}
+.ch{padding:12px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:12px;font-weight:700;color:var(--az);display:flex;align-items:center;gap:6px;letter-spacing:.1px}
+.ct-bar{width:3px;height:13px;background:var(--am);border-radius:2px;flex-shrink:0}
+.cb{padding:14px}
+
+/* ── METRIC GRID ─────────────────────── */
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.mc{background:var(--w);border-radius:var(--r);border:1px solid var(--brd);
+  padding:12px;box-shadow:var(--sh)}
+.ml{font-size:9px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.mv{font-size:24px;font-weight:700;letter-spacing:-.5px;line-height:1;color:var(--az)}
+.ms{font-size:10px;color:var(--tx3);margin-top:3px}
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;margin-top:5px;letter-spacing:.3px}
+.ba{background:var(--ga2);color:var(--ga3)}
+.bb{background:var(--gb2);color:var(--gb3)}
+.bc{background:var(--gc2);color:var(--gc3)}
+.baz{background:var(--az3);color:var(--az)}
+.bam{background:#fef9c3;color:#713f12}
+
+/* ── ABC BADGE ───────────────────────── */
+.abc{display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:6px;font-size:12px;font-weight:700;flex-shrink:0}
+.abcA{background:var(--ga2);color:var(--ga)}
+.abcB{background:var(--gb2);color:var(--gb)}
+.abcC{background:var(--gc2);color:var(--gc)}
+
+/* ── PRODUCT CARDS (list) ────────────── */
+.pcard{background:var(--w);border-radius:var(--r2);border:1px solid var(--brd);
+  padding:11px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;
+  box-shadow:var(--sh);cursor:pointer;transition:all .15s;active:scale(.98)}
+.pcard:active{background:#f8fafc;transform:scale(.99)}
+.pcard-info{flex:1;min-width:0}
+.pcard-nome{font-size:12px;font-weight:600;color:var(--tx);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.pcard-lab{font-size:10px;color:var(--tx3);margin-bottom:5px}
+.pcard-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pcard-val{font-size:13px;font-weight:700;color:var(--az)}
+.pcard-pct{font-size:10px;color:var(--tx3)}
+.pcard-right{text-align:right;flex-shrink:0}
+.pcard-rank{font-size:10px;color:var(--tx3);font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+
+/* ── ACUM BAR ────────────────────────── */
+.abar{display:flex;align-items:center;gap:6px;margin-top:5px}
+.abar-bg{flex:1;height:4px;background:var(--brd);border-radius:3px;overflow:hidden}
+.abar-fill{height:100%;border-radius:3px;transition:width .4s}
+.fillA{background:var(--ga)}.fillB{background:var(--gb)}.fillC{background:var(--gc)}
+.abar-txt{font-size:9px;color:var(--tx3);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+
+/* ── SEARCH ──────────────────────────── */
+.srch{position:relative;margin-bottom:12px}
+.srch input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--brd);
+  border-radius:var(--r3);font-size:13px;font-family:'Sora',sans-serif;
+  background:var(--w);color:var(--tx);-webkit-appearance:none}
+.srch input:focus{outline:none;border-color:var(--az)}
+.srch-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--tx3)}
+
+/* ── TABS ────────────────────────────── */
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:6px 14px;border-radius:var(--r3);border:1.5px solid var(--brd);
+  background:var(--w);color:var(--tx2);font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .15s;font-family:'Sora',sans-serif}
+.tab.on{background:var(--az);color:#fff;border-color:var(--az)}
+
+/* ── CHART ───────────────────────────── */
+.chart-wrap{position:relative;width:100%}
+
+/* ── ALERT ITEM ──────────────────────── */
+.ali{display:flex;align-items:center;gap:10px;padding:10px 0;
+  border-bottom:1px solid #f1f5f9}
+.ali:last-child{border-bottom:none}
+.ali-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dr{background:var(--gc)}.da{background:var(--gb)}.daz{background:var(--az)}
+.ali-nome{flex:1;font-size:12px;font-weight:500;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ali-val{font-size:12px;font-weight:700;color:var(--az);white-space:nowrap}
+
+/* ── DETAIL SHEET ────────────────────── */
+.sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
+  align-items:flex-end}
+.sheet-overlay.on{display:flex}
+.sheet{background:var(--w);border-radius:20px 20px 0 0;padding:20px 16px;
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+  width:100%;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:4px;background:var(--brd);border-radius:2px;margin:0 auto 16px}
+.sheet-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.sheet-nome{font-size:15px;font-weight:700;color:var(--tx);flex:1;line-height:1.3}
+.sheet-lab{font-size:11px;color:var(--tx3);margin-top:2px}
+.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet-item{background:var(--bg);border-radius:var(--r2);padding:10px 12px}
+.sheet-item-lbl{font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.sheet-item-val{font-size:14px;font-weight:700;color:var(--tx)}
+.sheet-close{background:var(--az);color:#fff;border:none;border-radius:var(--r3);
+  padding:12px;width:100%;font-size:13px;font-weight:600;cursor:pointer;margin-top:14px;
+  font-family:'Sora',sans-serif}
+
+/* ── SUMMARY STRIP ───────────────────── */
+.strip{background:var(--az);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between}
+.strip-lbl{font-size:10px;color:rgba(255,255,255,.7);margin-bottom:2px}
+.strip-val{font-size:18px;font-weight:700;color:var(--am);letter-spacing:-.5px}
+.strip-sub{font-size:10px;color:rgba(255,255,255,.6)}
+
+/* ── EMPTY ───────────────────────────── */
+.empty{text-align:center;padding:32px 16px;color:var(--tx3)}
+.empty-ico{font-size:40px;margin-bottom:8px}
+
+/* ── REPORT ──────────────────────────── */
+.rep-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;gap:10px}
+.rep-row:last-child{border-bottom:none}
+.rep-rank{font-size:11px;color:var(--tx3);font-family:'JetBrains Mono',monospace;width:24px;flex-shrink:0}
+.rep-nome{flex:1;font-size:12px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rep-val{font-size:12px;font-weight:700;color:var(--az);white-space:nowrap}
+
+/* ── UTILS ───────────────────────────── */
+.mono{font-family:'JetBrains Mono',monospace}
+.sec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;
+  letter-spacing:.7px;margin-bottom:8px}
+.cat-tag{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px}
+.cat-med{background:#eff6ff;color:#1e40af}
+.cat-ctrl{background:var(--gc2);color:var(--gc3)}
+.cat-perf{background:#fdf4ff;color:#6b21a8}
+.cat-out{background:#f8fafc;color:var(--tx2)}
+
+@media(min-width:480px){
+  .mg{grid-template-columns:repeat(3,1fr)}
+  .mg3{grid-template-columns:repeat(5,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QMwRXhpZgAATU0AKgAAAAgABAEOAAIAAAAkAAABSodpAAQAAAABAAABbpybAAEAAABCAAAC5uocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATG9nb3RpcG9fYXByZXNlbnRhw6fDo29fbMOibWluYXNfMDAAAAWQAwACAAAAFAAAAryQBAACAAAAFAAAAtCSkQACAAAAAzAwAACSkgACAAAAAzAwAADqHAAHAAABDAAAAbAAAAAAHOoAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADIwMTg6MDg6MjcgMjI6MTQ6MDgAMjAxODowODoyNyAyMjoxNDowOAAAAEwAbwBnAG8AdABpAHAAbwBfAGEAcAByAGUAcwBlAG4AdABhAOcA4wBvAF8AbADiAG0AaQBuAGEAcwBfADAAMAAAAP/hBR5odHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvADw/eHBhY2tldCBiZWdpbj0n77u/JyBpZD0nVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkJz8+DQo8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIj48cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iPjxleGlmOkRhdGVUaW1lT3JpZ2luYWw+MjAxOC0wOC0yN1QyMjoxNDowODwvZXhpZjpEYXRlVGltZU9yaWdpbmFsPjwvcmRmOkRlc2NyaXB0aW9uPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj48ZGM6dGl0bGU+PHJkZjpBbHQgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOmxpIHhtbDpsYW5nPSJ4LWRlZmF1bHQiPkxvZ290aXBvX2FwcmVzZW50YcOnw6NvX2zDom1pbmFzXzAwPC9yZGY6bGk+PC9yZGY6QWx0Pg0KCQkJPC9kYzp0aXRsZT48L3JkZjpEZXNjcmlwdGlvbj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0idXVpZDpmYWY1YmRkNS1iYTNkLTExZGEtYWQzMS1kMzNkNzUxODJmMWIiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyI+PGRjOmRlc2NyaXB0aW9uPjxyZGY6QWx0IHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+PHJkZjpsaSB4bWw6bGFuZz0ieC1kZWZhdWx0Ij5Mb2dvdGlwb19hcHJlc2VudGHDp8Ojb19sw6JtaW5hc18wMDwvcmRmOmxpPjwvcmRmOkFsdD4NCgkJCTwvZGM6ZGVzY3JpcHRpb24+PC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDw/eHBhY2tldCBlbmQ9J3cnPz7/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAFfAVMDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3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" alt="Agafarma"></div>
+  <div class="hdr-info">
+    <div class="hdr-nome">Agafarma Loja 03</div>
+    <div class="hdr-sub">REDE AGAFARMA — CURVA ABC</div>
+  </div>
+  <div class="hdr-data">12/03/2026</div>
+</header>
+
+<!-- SCROLL AREA -->
+<div class="scroll" id="scroll">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="pg on" id="pg-dash">
+  <div class="strip">
+    <div>
+      <div class="strip-lbl">Faturamento do dia</div>
+      <div class="strip-val">R$ 4.726,05</div>
+    </div>
+    <div style="text-align:right">
+      <div class="strip-lbl">Custo total</div>
+      <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,.9)">R$ 2.640,26</div>
+      <div class="strip-sub">208 itens vendidos</div>
+    </div>
+  </div>
+
+  <div class="mg3">
+    <div class="mc">
+      <div class="ml">Produtos</div>
+      <div class="mv">160</div>
+      <div class="ms">SKUs vendidos</div>
+    </div>
+    <div class="mc">
+      <div class="ml">Classe A</div>
+      <div class="mv" style="color:var(--ga)" id="cnt-a">—</div>
+      <div class="ms">itens críticos</div>
+      <div class="badge ba">80% fat.</div>
+    </div>
+    <div class="mc">
+      <div class="ml">Classe B</div>
+      <div class="mv" style="color:var(--gb)" id="cnt-b">—</div>
+      <div class="ms">moderado</div>
+      <div class="badge bb">15% fat.</div>
+    </div>
+    <div class="mc">
+      <div class="ml">Classe C</div>
+      <div class="mv" style="color:var(--gc)" id="cnt-c">—</div>
+      <div class="ms">baixo impacto</div>
+      <div class="badge bc">5% fat.</div>
+    </div>
+    <div class="mc">
+      <div class="ml">Descontos</div>
+      <div class="mv" style="font-size:16px;color:var(--gc)">R$ 1.645</div>
+      <div class="ms">25,82% do bruto</div>
+    </div>
+  </div>
+
+  <!-- PARETO CHART -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Pareto — Top 15 produtos</div>
+    </div>
+    <div class="cb" style="padding:10px">
+      <div style="display:flex;gap:10px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><span style="width:8px;height:8px;background:var(--ga);border-radius:2px;display:inline-block"></span>A</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><span style="width:8px;height:8px;background:var(--gb);border-radius:2px;display:inline-block"></span>B</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2)"><span style="width:16px;height:2px;background:var(--az);display:inline-block"></span>% acum.</span>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="cPareto" role="img" aria-label="Gráfico Pareto Curva ABC">Curva ABC.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP 5 -->
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Top 5 faturamento</div>
+      <span class="badge ba">Classe A</span>
+    </div>
+    <div class="cb" id="top5" style="padding:6px 14px"></div>
+  </div>
+
+  <!-- PIZZA -->
+  <div class="card">
+    <div class="ch"><div class="ct"><div class="ct-bar"></div>Distribuição ABC</div></div>
+    <div class="cb" style="display:flex;align-items:center;gap:14px">
+      <div class="chart-wrap" style="height:130px;width:130px;flex-shrink:0">
+        <canvas id="cPizza" role="img" aria-label="Pizza ABC">ABC.</canvas>
+      </div>
+      <div id="pizzaLeg" style="flex:1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LISTA ABC ═══ -->
+<div class="pg" id="pg-lista">
+  <div class="tabs" id="listaTabs">
+    <button class="tab on" onclick="filtList('todos',this)">Todos</button>
+    <button class="tab" onclick="filtList('A',this)">Classe A</button>
+    <button class="tab" onclick="filtList('B',this)">Classe B</button>
+    <button class="tab" onclick="filtList('C',this)">Classe C</button>
+    <button class="tab" onclick="filtList('med',this)">Medicamentos</button>
+    <button class="tab" onclick="filtList('ctrl',this)">Controlados</button>
+    <button class="tab" onclick="filtList('perf',this)">Perfumaria</button>
+  </div>
+  <div class="srch">
+    <svg class="srch-ico" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Buscar produto ou laboratório..." oninput="srch(this.value)" id="srchInput">
+  </div>
+  <div id="listaCount" style="font-size:11px;color:var(--tx3);margin-bottom:8px"></div>
+  <div id="listaBody"></div>
+</div>
+
+<!-- ═══ ALERTAS ═══ -->
+<div class="pg" id="pg-alertas">
+
+  <div class="sec-title">Produtos Classe A — monitoramento máximo</div>
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Classe A — 80% do faturamento</div>
+      <span class="badge ba" id="cnt-a2">—</span>
+    </div>
+    <div class="cb" id="alertA" style="padding:6px 14px"></div>
+  </div>
+
+  <div class="sec-title" style="margin-top:4px">Controlados — atenção redobrada</div>
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Medicamentos controlados</div>
+      <span class="badge bc" id="cnt-ctrl">—</span>
+    </div>
+    <div class="cb" id="alertCtrl" style="padding:6px 14px"></div>
+  </div>
+
+  <div class="sec-title" style="margin-top:4px">Sugestão de reposição — Classe A</div>
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Compra sugerida</div>
+      <span class="badge bam">prioridade</span>
+    </div>
+    <div class="cb" id="sugList" style="padding:6px 14px"></div>
+  </div>
+</div>
+
+<!-- ═══ RELATÓRIO ═══ -->
+<div class="pg" id="pg-rel">
+  <div class="strip">
+    <div>
+      <div class="strip-lbl">Período analisado</div>
+      <div style="font-size:15px;font-weight:700;color:#fff">12/03/2026</div>
+    </div>
+    <div style="text-align:right">
+      <div class="strip-lbl">Faturamento</div>
+      <div class="strip-val" style="font-size:15px">R$ 4.726,05</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="ch">
+      <div class="ct"><div class="ct-bar"></div>Curva ABC completa</div>
+    </div>
+    <div class="cb" id="relBody" style="padding:6px 14px"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button onclick="expCSV()" style="background:var(--az);color:#fff;border:none;border-radius:var(--r);
+      padding:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif">
+      &#x2193; Exportar CSV
+    </button>
+    <button onclick="expHTML()" style="background:var(--am);color:var(--az);border:none;border-radius:var(--r);
+      padding:14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif">
+      &#x2193; Relatório HTML
+    </button>
+  </div>
+</div>
+
+</div><!-- /scroll -->
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bnav-btn on" onclick="pg('dash',this)">
+    <div class="bnav-ico">&#x1F4CA;</div>
+    <div class="bnav-lbl">Dashboard</div>
+    <div class="bnav-dot"></div>
+  </button>
+  <button class="bnav-btn" onclick="pg('lista',this)">
+    <div class="bnav-ico">&#x1F4CB;</div>
+    <div class="bnav-lbl">Curva ABC</div>
+    <div class="bnav-dot"></div>
+  </button>
+  <button class="bnav-btn" onclick="pg('alertas',this)">
+    <div class="bnav-ico">&#x26A0;&#xFE0F;</div>
+    <div class="bnav-lbl">Alertas</div>
+    <div class="bnav-dot"></div>
+  </button>
+  <button class="bnav-btn" onclick="pg('rel',this)">
+    <div class="bnav-ico">&#x1F4C4;</div>
+    <div class="bnav-lbl">Relatório</div>
+    <div class="bnav-dot"></div>
+  </button>
+</nav>
+
+</div><!-- /app -->
+
+<!-- DETAIL SHEET -->
+<div class="sheet-overlay" id="sheet" onclick="closeSheet(event)">
+  <div class="sheet" id="sheetContent">
+    <div class="sheet-handle"></div>
+    <div id="sheetBody"></div>
+    <button class="sheet-close" onclick="closeSheet()">Fechar</button>
+  </div>
+</div>
+
+<script>
+const PRODS = [{"c": "75683", "n": "PROSSO D+ KM 1.000UI 30CP", "l": "MOMENTA", "e": 0, "q": 1, "cu": 115.8, "b": 159.99, "d": -8.99, "v": 151.0, "p": 3.2, "cat": "med", "pct": 3.2, "acum": 3.2, "rank": 1, "classe": "A"}, {"c": "59396", "n": "DASTENE 0,5MG 30CAP GEL", "l": "ACHE", "e": 0, "q": 1, "cu": 86.21, "b": 128.97, "d": -15.98, "v": 112.99, "p": 2.39, "cat": "ctrl", "pct": 2.39, "acum": 5.59, "rank": 2, "classe": "A"}, {"c": "70465", "n": "AMOX+CLAV POT 875+125MG 20CP", "l": "LEGRAND", "e": 1, "q": 1, "cu": 49.78, "b": 131.51, "d": -19.52, "v": 111.99, "p": 2.37, "cat": "med", "pct": 2.37, "acum": 7.96, "rank": 3, "classe": "A"}, {"c": "33916", "n": "NINHO FASES 1 PO 800G", "l": "NESTLE", "e": 14, "q": 2, "cu": 83.54, "b": 109.98, "d": 0.0, "v": 109.98, "p": 2.33, "cat": "out", "pct": 2.33, "acum": 10.28, "rank": 4, "classe": "A"}, {"c": "71300", "n": "ALLOVITA 50MG/ML SOL CAP 50ML", "l": "LEGRAND", "e": 0, "q": 2, "cu": 78.6, "b": 120.94, "d": -14.96, "v": 105.98, "p": 2.24, "cat": "med", "pct": 2.24, "acum": 12.53, "rank": 5, "classe": "A"}, {"c": "26079", "n": "AMOX+CLAV POT 500+125MG 21CP", "l": "SANDOZ", "e": 3, "q": 1, "cu": 46.28, "b": 167.05, "d": -67.05, "v": 100.0, "p": 2.12, "cat": "med", "pct": 2.12, "acum": 14.64, "rank": 6, "classe": "A"}, {"c": "7678", "n": "KALOBA 825MG/ML GTS 20ML", "l": "HERBARIUM", "e": 0, "q": 1, "cu": 70.04, "b": 103.87, "d": -11.88, "v": 91.99, "p": 1.95, "cat": "med", "pct": 1.95, "acum": 16.59, "rank": 7, "classe": "A"}, {"c": "74867", "n": "FR HUGGIES SUP CAR HIPER XG 56", "l": "KIMBERLY CLARK", "e": 4, "q": 1, "cu": 61.99, "b": 79.99, "d": 0.0, "v": 79.99, "p": 1.69, "cat": "out", "pct": 1.69, "acum": 18.28, "rank": 8, "classe": "A"}, {"c": "75512", "n": "VIOFTA 0,40% COL 10ML", "l": "LEGRAND", "e": 1, "q": 1, "cu": 59.05, "b": 89.99, "d": -10.0, "v": 79.99, "p": 1.69, "cat": "med", "pct": 1.69, "acum": 19.97, "rank": 9, "classe": "A"}, {"c": "66913", "n": "TRAMADON 100MG 10CP REV L.P", "l": "CRISTALIA", "e": 1, "q": 1, "cu": 56.71, "b": 93.4, "d": -18.4, "v": 75.0, "p": 1.59, "cat": "ctrl", "pct": 1.59, "acum": 21.56, "rank": 10, "classe": "A"}, {"c": "64848", "n": "APTAMIL PREM 2 PO 800G", "l": "DANONE", "e": 6, "q": 1, "cu": 55.66, "b": 74.99, "d": 0.0, "v": 74.99, "p": 1.59, "cat": "out", "pct": 1.59, "acum": 23.15, "rank": 11, "classe": "A"}, {"c": "7230", "n": "IUMI 3MG+0,02MG 24CP REV", "l": "LIBBS", "e": 2, "q": 1, "cu": 50.24, "b": 75.92, "d": -7.93, "v": 67.99, "p": 1.44, "cat": "ctrl", "pct": 1.44, "acum": 24.58, "rank": 12, "classe": "A"}, {"c": "79655", "n": "ROUP INT TENA PANTS CO G/EG 18", "l": "ESSITY DO BRASIL", "e": 0, "q": 1, "cu": 39.26, "b": 67.99, "d": 0.0, "v": 67.99, "p": 1.44, "cat": "out", "pct": 1.44, "acum": 26.02, "rank": 13, "classe": "A"}, {"c": "64334", "n": "DROSPI+ETIN 3MG+0,03MG 63CP", "l": "EMS", "e": 0, "q": 1, "cu": 32.93, "b": 155.73, "d": -90.73, "v": 65.0, "p": 1.38, "cat": "ctrl", "pct": 1.38, "acum": 27.4, "rank": 14, "classe": "A"}, {"c": "69861", "n": "D'ORTO 150MG 1CP", "l": "EUROFARMA", "e": 2, "q": 1, "cu": 48.17, "b": 78.45, "d": -15.46, "v": 62.99, "p": 1.33, "cat": "ctrl", "pct": 1.33, "acum": 28.73, "rank": 15, "classe": "A"}, {"c": "9121", "n": "TOPIRAMATO 50MG 60CP REV", "l": "EUROFARMA", "e": 3, "q": 1, "cu": 24.0, "b": 195.44, "d": -135.46, "v": 59.98, "p": 1.27, "cat": "ctrl", "pct": 1.27, "acum": 30.0, "rank": 16, "classe": "A"}, {"c": "74076", "n": "NESTONUTRI PO 800G", "l": "NESTLE", "e": 3, "q": 1, "cu": 41.59, "b": 57.99, "d": 0.0, "v": 57.99, "p": 1.23, "cat": "out", "pct": 1.23, "acum": 31.23, "rank": 17, "classe": "A"}, {"c": "69849", "n": "EXTRATO DE PROPOLIS VER 30ML", "l": "APIS FLORA", "e": 3, "q": 1, "cu": 33.94, "b": 54.99, "d": 0.0, "v": 54.99, "p": 1.16, "cat": "med", "pct": 1.16, "acum": 32.39, "rank": 18, "classe": "A"}, {"c": "71291", "n": "NINHO FASES 3 PO 800G", "l": "NESTLE", "e": 1, "q": 1, "cu": 34.95, "b": 53.99, "d": 0.0, "v": 53.99, "p": 1.14, "cat": "out", "pct": 1.14, "acum": 33.53, "rank": 19, "classe": "A"}, {"c": "68156", "n": "MARESIS BABY 0,9% 360 SP 100ML", "l": "FQM GRUPO", "e": 0, "q": 1, "cu": 38.56, "b": 57.13, "d": -5.71, "v": 51.42, "p": 1.09, "cat": "med", "pct": 1.09, "acum": 34.62, "rank": 20, "classe": "A"}, {"c": "75062", "n": "CARBOLITIUM 300MG 60CP REV", "l": "EUROFARMA", "e": 0, "q": 1, "cu": 37.27, "b": 60.73, "d": -10.74, "v": 49.99, "p": 1.06, "cat": "ctrl", "pct": 1.06, "acum": 35.68, "rank": 21, "classe": "A"}, {"c": "74600", "n": "PEG-LAX 3350 14ENV 17,5G", "l": "MYRALIS", "e": 0, "q": 1, "cu": 34.36, "b": 59.99, "d": -10.0, "v": 49.99, "p": 1.06, "cat": "med", "pct": 1.06, "acum": 36.74, "rank": 22, "classe": "A"}, {"c": "17437", "n": "SERTRALINA 100MG 30CP REV", "l": "EUROFARMA", "e": 0, "q": 1, "cu": 17.82, "b": 217.64, "d": -167.65, "v": 49.99, "p": 1.06, "cat": "ctrl", "pct": 1.06, "acum": 37.79, "rank": 23, "classe": "A"}, {"c": "9330", "n": "LAMOTRIGINA 100MG 30CP", "l": "TEUTO", "e": 7, "q": 2, "cu": 21.74, "b": 186.72, "d": -136.74, "v": 49.98, "p": 1.06, "cat": "ctrl", "pct": 1.06, "acum": 38.85, "rank": 24, "classe": "A"}, {"c": "41873", "n": "RITALINA 10MG 30CP", "l": "NOVARTIS", "e": 1, "q": 1, "cu": 34.5, "b": 53.35, "d": -5.36, "v": 47.99, "p": 1.02, "cat": "ctrl", "pct": 1.02, "acum": 39.87, "rank": 25, "classe": "A"}, {"c": "78346", "n": "SANY D CAL 2.000UI 30CP REV", "l": "ACHE", "e": 1, "q": 1, "cu": 32.18, "b": 49.99, "d": -2.0, "v": 47.99, "p": 1.02, "cat": "med", "pct": 1.02, "acum": 40.88, "rank": 26, "classe": "A"}, {"c": "68997", "n": "SORINE JET BABY 0,9% JAT 100ML", "l": "ACHE", "e": 1, "q": 1, "cu": 31.61, "b": 47.31, "d": 0.0, "v": 47.31, "p": 1.0, "cat": "med", "pct": 1.0, "acum": 41.88, "rank": 27, "classe": "A"}, {"c": "5271", "n": "ALIVIUM 100MG/ML GTS 20ML", "l": "HYPERA", "e": 1, "q": 1, "cu": 33.13, "b": 48.81, "d": -1.82, "v": 46.99, "p": 0.99, "cat": "med", "pct": 0.99, "acum": 42.88, "rank": 28, "classe": "A"}, {"c": "4662", "n": "CETOPROFENO 100MG 20CP REV", "l": "MEDLEY/SANOFI", "e": 4, "q": 1, "cu": 29.07, "b": 45.22, "d": 0.0, "v": 45.22, "p": 0.96, "cat": "med", "pct": 0.96, "acum": 43.84, "rank": 29, "classe": "A"}, {"c": "64321", "n": "TADALAFILA 20MG 4CP REV", "l": "NEO QUIMICA", "e": 15, "q": 3, "cu": 8.13, "b": 119.1, "d": -74.1, "v": 45.0, "p": 0.95, "cat": "ctrl", "pct": 0.95, "acum": 44.79, "rank": 30, "classe": "A"}, {"c": "70879", "n": "MIRTAZAPINA 15MG 30CP OROD", "l": "EMS", "e": 3, "q": 1, "cu": 19.06, "b": 82.19, "d": -37.2, "v": 44.99, "p": 0.95, "cat": "ctrl", "pct": 0.95, "acum": 45.74, "rank": 31, "classe": "A"}, {"c": "79307", "n": "NOVALGINA 50MG/ML LIQ 100ML", "l": "OPELLA/SANOFI", "e": 1, "q": 1, "cu": 33.38, "b": 48.44, "d": -3.45, "v": 44.99, "p": 0.95, "cat": "med", "pct": 0.95, "acum": 46.69, "rank": 32, "classe": "A"}, {"c": "23147", "n": "OLANZAPINA 5MG 30CP", "l": "ACHE/BIOSINTETICA", "e": 1, "q": 1, "cu": 15.92, "b": 131.43, "d": -86.44, "v": 44.99, "p": 0.95, "cat": "ctrl", "pct": 0.95, "acum": 47.64, "rank": 33, "classe": "A"}, {"c": "33428", "n": "DIPIRONA 1G 10CP", "l": "PRATI DONADUZZI", "e": 75, "q": 3, "cu": 8.07, "b": 44.97, "d": 0.0, "v": 44.97, "p": 0.95, "cat": "med", "pct": 0.95, "acum": 48.6, "rank": 34, "classe": "A"}, {"c": "78889", "n": "COMP GAZE SAUDE 14X28 10UN", "l": "AGAFARMA", "e": 2, "q": 15, "cu": 15.75, "b": 44.85, "d": 0.0, "v": 44.85, "p": 0.95, "cat": "out", "pct": 0.95, "acum": 49.54, "rank": 35, "classe": "A"}, {"c": "72931", "n": "PEG-LAX 3350 14ENV 8,5G", "l": "MYRALIS", "e": 1, "q": 1, "cu": 25.34, "b": 44.99, "d": -2.0, "v": 42.99, "p": 0.91, "cat": "med", "pct": 0.91, "acum": 50.45, "rank": 36, "classe": "A"}, {"c": "3285", "n": "PURAN T4 125MCG 30CP", "l": "MEDLEY/SANOFI", "e": 3, "q": 2, "cu": 31.44, "b": 50.38, "d": -8.4, "v": 41.98, "p": 0.89, "cat": "med", "pct": 0.89, "acum": 51.34, "rank": 37, "classe": "A"}, {"c": "2504", "n": "ALMEIDA PRADO N46 60CP", "l": "MEGALABS", "e": 2, "q": 1, "cu": 23.24, "b": 41.33, "d": 0.0, "v": 41.33, "p": 0.87, "cat": "med", "pct": 0.87, "acum": 52.22, "rank": 38, "classe": "A"}, {"c": "77622", "n": "CENTROV IMUNE 60CAP", "l": "MERCOFARMA", "e": 1, "q": 1, "cu": 16.79, "b": 39.99, "d": 0.0, "v": 39.99, "p": 0.85, "cat": "med", "pct": 0.85, "acum": 53.06, "rank": 39, "classe": "A"}, {"c": "74385", "n": "CARBONATO DE LITIO 300MG 60CP", "l": "BIOLAB GENERICOS", "e": 3, "q": 1, "cu": 17.86, "b": 39.68, "d": 0.0, "v": 39.68, "p": 0.84, "cat": "ctrl", "pct": 0.84, "acum": 53.9, "rank": 40, "classe": "A"}, {"c": "79508", "n": "OMEGA 3+6+9 1000MG 60CAP", "l": "MERCOFARMA", "e": 2, "q": 1, "cu": 23.29, "b": 37.99, "d": 0.0, "v": 37.99, "p": 0.8, "cat": "med", "pct": 0.8, "acum": 54.71, "rank": 41, "classe": "A"}, {"c": "71401", "n": "REPEL SBP BABY LOC S/F 100ML", "l": "RECKITT BENCKISER", "e": 1, "q": 1, "cu": 27.19, "b": 35.99, "d": 0.0, "v": 35.99, "p": 0.76, "cat": "med", "pct": 0.76, "acum": 55.47, "rank": 42, "classe": "A"}, {"c": "3277", "n": "AMOXICILINA 500MG 21CAP", "l": "PRATI DONADUZZI", "e": 12, "q": 2, "cu": 11.78, "b": 64.94, "d": -28.96, "v": 35.98, "p": 0.76, "cat": "med", "pct": 0.76, "acum": 56.23, "rank": 43, "classe": "A"}, {"c": "74048", "n": "DULCOLAX 7,5MG/ML GTS 30ML", "l": "OPELLA/SANOFI", "e": 1, "q": 1, "cu": 25.16, "b": 39.04, "d": -6.05, "v": 32.99, "p": 0.7, "cat": "med", "pct": 0.7, "acum": 56.93, "rank": 44, "classe": "A"}, {"c": "69619", "n": "NOVALGINA 500MG/ML GTS 20ML", "l": "OPELLA/SANOFI", "e": 2, "q": 1, "cu": 23.41, "b": 32.05, "d": 0.0, "v": 32.05, "p": 0.68, "cat": "med", "pct": 0.68, "acum": 57.61, "rank": 45, "classe": "A"}, {"c": "76231", "n": "ALGODAO CREMER QUAD 100UN", "l": "CREMER", "e": 6, "q": 1, "cu": 16.86, "b": 29.99, "d": 0.0, "v": 29.99, "p": 0.63, "cat": "perf", "pct": 0.63, "acum": 58.24, "rank": 46, "classe": "A"}, {"c": "65943", "n": "ATORVASTATINA 40MG 30CP REV", "l": "CIMED", "e": 4, "q": 1, "cu": 9.69, "b": 144.19, "d": -114.2, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 58.87, "rank": 47, "classe": "A"}, {"c": "70854", "n": "BUSCOFEM 400MG 10CAP GEL", "l": "HYPERA", "e": 4, "q": 1, "cu": 21.38, "b": 34.56, "d": -4.57, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 59.51, "rank": 48, "classe": "A"}, {"c": "19515", "n": "CUR CREMER ADV CURA ACNE 24UN", "l": "CREMER", "e": 4, "q": 1, "cu": 11.55, "b": 29.99, "d": 0.0, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 60.14, "rank": 49, "classe": "A"}, {"c": "4164", "n": "LUFTAL 75MG/ML CER GTS 15ML", "l": "RECKITT BENCKISER", "e": 1, "q": 1, "cu": 19.55, "b": 31.6, "d": -1.61, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 60.78, "rank": 50, "classe": "A"}, {"c": "78521", "n": "ONDANSETRONA 8MG 10CP OROD", "l": "BIOLAB GENERICOS", "e": 6, "q": 1, "cu": 7.97, "b": 61.46, "d": -31.47, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 61.41, "rank": 51, "classe": "A"}, {"c": "74252", "n": "PANTOPRAZOL 40MG 28CP REV", "l": "EUROFARMA", "e": 5, "q": 1, "cu": 6.98, "b": 51.15, "d": -21.16, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 62.05, "rank": 52, "classe": "A"}, {"c": "4040", "n": "PREDNISOLONA 3MG/ML LIQ 120ML", "l": "ACHE/BIOSINTETICA", "e": 1, "q": 1, "cu": 10.38, "b": 41.14, "d": -11.15, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 62.68, "rank": 53, "classe": "A"}, {"c": "4522", "n": "SELENE 0,035MG+2MG 21CP REV", "l": "EUROFARMA", "e": 3, "q": 1, "cu": 22.41, "b": 36.51, "d": -6.52, "v": 29.99, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 63.32, "rank": 54, "classe": "A"}, {"c": "78709", "n": "TADALAFILA 5MG 30CP REV", "l": "ACHE/BIOSINTETICA", "e": 9, "q": 1, "cu": 5.02, "b": 105.15, "d": -75.16, "v": 29.99, "p": 0.63, "cat": "ctrl", "pct": 0.63, "acum": 63.95, "rank": 55, "classe": "A"}, {"c": "1510", "n": "COLIRIO TEUTO 20ML", "l": "TEUTO", "e": 12, "q": 2, "cu": 7.8, "b": 32.3, "d": -2.32, "v": 29.98, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 64.59, "rank": 56, "classe": "A"}, {"c": "21064", "n": "LENC UME NATURAL BABY M/F 100U", "l": "EVER GREEN", "e": 154, "q": 3, "cu": 17.97, "b": 29.97, "d": 0.0, "v": 29.97, "p": 0.63, "cat": "out", "pct": 0.63, "acum": 65.22, "rank": 57, "classe": "A"}, {"c": "3452", "n": "NIMESULIDA 100MG 12CP", "l": "NEO QUIMICA", "e": 39, "q": 3, "cu": 4.08, "b": 38.97, "d": -9.0, "v": 29.97, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 65.85, "rank": 58, "classe": "A"}, {"c": "68055", "n": "SALONPAS EMPLASTRO G 2UN", "l": "HISAMITSU", "e": 4, "q": 3, "cu": 20.64, "b": 29.97, "d": 0.0, "v": 29.97, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 66.49, "rank": 59, "classe": "A"}, {"c": "5180", "n": "ALLEGRA 60MG 10CP REV", "l": "OPELLA/SANOFI", "e": 1, "q": 1, "cu": 20.35, "b": 29.54, "d": 0.0, "v": 29.54, "p": 0.63, "cat": "med", "pct": 0.63, "acum": 67.11, "rank": 60, "classe": "A"}, {"c": "66402", "n": "BUSCOPAN 10MG 20DRG", "l": "HYPERA", "e": 4, "q": 1, "cu": 18.22, "b": 28.16, "d": 0.0, "v": 28.16, "p": 0.6, "cat": "med", "pct": 0.6, "acum": 67.71, "rank": 61, "classe": "A"}, {"c": "77779", "n": "FR MILI L&C JUMBO XXG 20UN", "l": "MILI", "e": 6, "q": 1, "cu": 19.94, "b": 27.99, "d": 0.0, "v": 27.99, "p": 0.59, "cat": "out", "pct": 0.59, "acum": 68.3, "rank": 62, "classe": "A"}, {"c": "2134", "n": "BALS BENGUE GEL DERM 20G", "l": "EMS/SIGMA PHARMA", "e": 0, "q": 1, "cu": 18.17, "b": 27.7, "d": -1.71, "v": 25.99, "p": 0.55, "cat": "med", "pct": 0.55, "acum": 68.85, "rank": 63, "classe": "A"}, {"c": "55002", "n": "HID LAB NIVEA MEL SHIN 4,8G", "l": "BEIERSDORF", "e": 3, "q": 1, "cu": 16.81, "b": 25.99, "d": 0.0, "v": 25.99, "p": 0.55, "cat": "med", "pct": 0.55, "acum": 69.4, "rank": 64, "classe": "A"}, {"c": "65669", "n": "NEOLEFRIN XPE 60ML", "l": "NEO QUIMICA", "e": 0, "q": 1, "cu": 8.65, "b": 25.76, "d": 0.0, "v": 25.76, "p": 0.55, "cat": "med", "pct": 0.55, "acum": 69.95, "rank": 65, "classe": "A"}, {"c": "3592", "n": "ACETILCISTEINA XPE PED 120ML", "l": "LEGRAND", "e": 4, "q": 1, "cu": 7.49, "b": 39.56, "d": -14.57, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 70.47, "rank": 66, "classe": "A"}, {"c": "6501", "n": "AEROLIN 100MCG/DO SPR 200DOS", "l": "GSK", "e": 2, "q": 1, "cu": 15.6, "b": 26.58, "d": -1.59, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 71.0, "rank": 67, "classe": "A"}, {"c": "5302", "n": "AZITROMICINA 500MG 5CP REV", "l": "TEUTO", "e": 5, "q": 1, "cu": 7.59, "b": 42.83, "d": -17.84, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 71.53, "rank": 68, "classe": "A"}, {"c": "13813", "n": "CHUP KUKA RED T2 AZ", "l": "KUKA", "e": 3, "q": 1, "cu": 10.02, "b": 24.99, "d": 0.0, "v": 24.99, "p": 0.53, "cat": "out", "pct": 0.53, "acum": 72.06, "rank": 69, "classe": "A"}, {"c": "67062", "n": "CR DENT BONI NAT MEN/MEL 90G", "l": "BONIQUET DO BRASIL", "e": 3, "q": 1, "cu": 12.47, "b": 24.99, "d": 0.0, "v": 24.99, "p": 0.53, "cat": "perf", "pct": 0.53, "acum": 72.59, "rank": 70, "classe": "A"}, {"c": "2596", "n": "MALVONA SOL DIL 100ML", "l": "MEGALABS", "e": 1, "q": 1, "cu": 16.87, "b": 27.35, "d": -2.36, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 73.12, "rank": 71, "classe": "A"}, {"c": "69413", "n": "MASC CAP PANTENE HIDRAT 270ML", "l": "P&G", "e": 1, "q": 1, "cu": 14.08, "b": 24.99, "d": 0.0, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 73.65, "rank": 72, "classe": "A"}, {"c": "24839", "n": "MELAGRIAO TUT FR SPR 30ML", "l": "CATARINENSE", "e": 1, "q": 1, "cu": 11.15, "b": 24.99, "d": 0.0, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 74.18, "rank": 73, "classe": "A"}, {"c": "79042", "n": "SAB LIQ JOHNSONS BABY CAM 200M", "l": "KENVUE", "e": 0, "q": 1, "cu": 11.8, "b": 24.99, "d": 0.0, "v": 24.99, "p": 0.53, "cat": "med", "pct": 0.53, "acum": 74.7, "rank": 74, "classe": "A"}, {"c": "69455", "n": "SERTRALINA 50MG 30CP REV", "l": "GERMED", "e": 1, "q": 1, "cu": 9.85, "b": 98.43, "d": -73.44, "v": 24.99, "p": 0.53, "cat": "ctrl", "pct": 0.53, "acum": 75.23, "rank": 75, "classe": "A"}, {"c": "77725", "n": "DES DOVE CR ST POWD 45G", "l": "UNILEVER", "e": 0, "q": 1, "cu": 15.55, "b": 23.99, "d": 0.0, "v": 23.99, "p": 0.51, "cat": "perf", "pct": 0.51, "acum": 75.74, "rank": 76, "classe": "A"}, {"c": "80416", "n": "ATAD CREP AGAFARMA 15X1,8M", "l": "AGAFARMA", "e": 1, "q": 4, "cu": 12.76, "b": 23.96, "d": 0.0, "v": 23.96, "p": 0.51, "cat": "out", "pct": 0.51, "acum": 76.25, "rank": 77, "classe": "A"}, {"c": "3302", "n": "ANTI SEPTICO C/A SPR 50ML", "l": "KLEY HERTZ", "e": 8, "q": 1, "cu": 12.98, "b": 22.99, "d": 0.0, "v": 22.99, "p": 0.49, "cat": "med", "pct": 0.49, "acum": 76.73, "rank": 78, "classe": "A"}, {"c": "18548", "n": "CR DENT MALVATRIK JR 70G", "l": "MEGALABS", "e": 1, "q": 1, "cu": 14.79, "b": 22.99, "d": 0.0, "v": 22.99, "p": 0.49, "cat": "perf", "pct": 0.49, "acum": 77.22, "rank": 79, "classe": "A"}, {"c": "79512", "n": "DES REXONA AER COTT DRY 250ML", "l": "UNILEVER", "e": 4, "q": 1, "cu": 15.85, "b": 22.99, "d": 0.0, "v": 22.99, "p": 0.49, "cat": "perf", "pct": 0.49, "acum": 77.71, "rank": 80, "classe": "A"}, {"c": "80246", "n": "ESPELHO DE MESA", "l": "NÃO DEFINIDO", "e": 3, "q": 1, "cu": 7.5, "b": 22.99, "d": 0.0, "v": 22.99, "p": 0.49, "cat": "out", "pct": 0.49, "acum": 78.19, "rank": 81, "classe": "A"}, {"c": "75942", "n": "LIP GLOSS MAX LOVE 3X1", "l": "MAX LOVE", "e": 1, "q": 1, "cu": 12.99, "b": 21.99, "d": 0.0, "v": 21.99, "p": 0.47, "cat": "perf", "pct": 0.47, "acum": 78.66, "rank": 82, "classe": "A"}, {"c": "15971", "n": "LACTUGOLD AME LIQ 120ML", "l": "ARTE NATIVA", "e": 4, "q": 1, "cu": 8.52, "b": 21.0, "d": 0.0, "v": 21.0, "p": 0.44, "cat": "med", "pct": 0.44, "acum": 79.1, "rank": 83, "classe": "A"}, {"c": "67617", "n": "FLUCONAZOL 150MG 2CAP", "l": "VITAPAN", "e": 21, "q": 2, "cu": 2.62, "b": 38.32, "d": -18.32, "v": 20.0, "p": 0.42, "cat": "ctrl", "pct": 0.42, "acum": 79.53, "rank": 84, "classe": "A"}, {"c": "2631", "n": "PROMERGAN 20MG/G CR DERM 30G", "l": "BELFAR/ALTEFAR", "e": 8, "q": 1, "cu": 5.98, "b": 25.23, "d": -5.23, "v": 20.0, "p": 0.42, "cat": "med", "pct": 0.42, "acum": 79.95, "rank": 85, "classe": "A"}, {"c": "33449", "n": "BETAM+FOS BETAM INJ AMP 1ML", "l": "EUROFARMA", "e": 1, "q": 1, "cu": 4.67, "b": 29.76, "d": -9.77, "v": 19.99, "p": 0.42, "cat": "med", "pct": 0.42, "acum": 80.37, "rank": 86, "classe": "B"}, {"c": "3633", "n": "CETOC+BETAM+NEOM POM DERM 30G", "l": "EMS", "e": 1, "q": 1, "cu": 8.56, "b": 37.78, "d": -17.79, "v": 19.99, "p": 0.42, "cat": "med", "pct": 0.42, "acum": 80.8, "rank": 87, "classe": "B"}, {"c": "2043", "n": "ENXAK 12CP", "l": "CAZI", "e": 7, "q": 1, "cu": 10.39, "b": 22.3, "d": -2.31, "v": 19.99, "p": 0.42, "cat": "med", "pct": 0.42, "acum": 81.22, "rank": 88, "classe": "B"}, {"c": "67800", "n": "FR MILI U.SECA JUMBI G 20UN", "l": "MILI", "e": 9, "q": 1, "cu": 14.38, "b": 19.99, "d": 0.0, "v": 19.99, "p": 0.42, "cat": "out", "pct": 0.42, "acum": 81.64, "rank": 89, "classe": "B"}, {"c": "388", "n": "PROPRANOLOL 40MG 30CP", "l": "MEDLEY/SANOFI", "e": 2, "q": 2, "cu": 11.0, "b": 22.06, "d": -2.07, "v": 19.99, "p": 0.42, "cat": "ctrl", "pct": 0.42, "acum": 82.06, "rank": 90, "classe": "B"}, {"c": "66811", "n": "QUETIAPINA 25MG 30CP REV", "l": "TEUTO", "e": 7, "q": 1, "cu": 4.71, "b": 61.49, "d": -41.5, "v": 19.99, "p": 0.42, "cat": "ctrl", "pct": 0.42, "acum": 82.49, "rank": 91, "classe": "B"}, {"c": "67728", "n": "CHUP DAINTY ANPLAS T2", "l": "PETITA", "e": 7, "q": 4, "cu": 5.96, "b": 19.96, "d": 0.0, "v": 19.96, "p": 0.42, "cat": "out", "pct": 0.42, "acum": 82.91, "rank": 92, "classe": "B"}, {"c": "4694", "n": "TANDRILAX 15CP", "l": "ACHE", "e": 2, "q": 1, "cu": 11.21, "b": 19.93, "d": 0.0, "v": 19.93, "p": 0.42, "cat": "med", "pct": 0.42, "acum": 83.33, "rank": 93, "classe": "B"}, {"c": "21785", "n": "ENX BUC PERIOTRAT S/ALC 250ML", "l": "KLEY HERTZ", "e": 5, "q": 1, "cu": 10.34, "b": 24.99, "d": -6.0, "v": 18.99, "p": 0.4, "cat": "med", "pct": 0.4, "acum": 83.73, "rank": 94, "classe": "B"}, {"c": "2410", "n": "CERUMIN SOL OTOL 8ML", "l": "NOVARTIS", "e": 3, "q": 1, "cu": 12.77, "b": 19.72, "d": -1.73, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 84.11, "rank": 95, "classe": "B"}, {"c": "2743", "n": "CETOC+BETAM CR DERM 30G", "l": "EUROFARMA", "e": 2, "q": 1, "cu": 6.54, "b": 29.07, "d": -11.08, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 84.49, "rank": 96, "classe": "B"}, {"c": "3300", "n": "CETOCONAZOL 20MG/G CR DERM 30G", "l": "CIMED", "e": 0, "q": 1, "cu": 3.59, "b": 22.69, "d": -4.7, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 84.88, "rank": 97, "classe": "B"}, {"c": "74037", "n": "DES BOZZ AER CLIN UL COOL", "l": "COTY", "e": 3, "q": 1, "cu": 6.59, "b": 17.99, "d": 0.0, "v": 17.99, "p": 0.38, "cat": "perf", "pct": 0.38, "acum": 85.26, "rank": 98, "classe": "B"}, {"c": "1316", "n": "DIPIRONA 50MG/ML LIQ 100ML", "l": "ACHE/BIOSINTETICA", "e": 3, "q": 1, "cu": 6.13, "b": 19.83, "d": -1.84, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 85.64, "rank": 99, "classe": "B"}, {"c": "11212", "n": "FIO DENT JOHNSONS EXP MEN 50M", "l": "KENVUE", "e": 3, "q": 1, "cu": 10.48, "b": 17.99, "d": 0.0, "v": 17.99, "p": 0.38, "cat": "perf", "pct": 0.38, "acum": 86.02, "rank": 100, "classe": "B"}, {"c": "61811", "n": "KIT VITAY SH+COND MEUS CAC", "l": "EMBELLEZE", "e": 2, "q": 1, "cu": 9.56, "b": 17.99, "d": 0.0, "v": 17.99, "p": 0.38, "cat": "perf", "pct": 0.38, "acum": 86.4, "rank": 101, "classe": "B"}, {"c": "69011", "n": "NEOLEFRIN 20CP", "l": "NEO QUIMICA", "e": 3, "q": 1, "cu": 6.5, "b": 17.99, "d": 0.0, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 86.78, "rank": 102, "classe": "B"}, {"c": "2443", "n": "PURAN T4 50MCG 30CP", "l": "MEDLEY/SANOFI", "e": 5, "q": 1, "cu": 12.58, "b": 20.16, "d": -2.17, "v": 17.99, "p": 0.38, "cat": "med", "pct": 0.38, "acum": 87.16, "rank": 103, "classe": "B"}, {"c": "65983", "n": "CR NIVEA LT AZ 29G", "l": "BEIERSDORF", "e": 2, "q": 1, "cu": 9.15, "b": 16.99, "d": 0.0, "v": 16.99, "p": 0.36, "cat": "perf", "pct": 0.36, "acum": 87.52, "rank": 104, "classe": "B"}, {"c": "71931", "n": "ANTI SEPTICO SPR 50ML", "l": "KLEY HERTZ", "e": 6, "q": 1, "cu": 7.95, "b": 15.99, "d": 0.0, "v": 15.99, "p": 0.34, "cat": "med", "pct": 0.34, "acum": 87.86, "rank": 105, "classe": "B"}, {"c": "12004", "n": "DES REXONA MEN AER V8 150ML", "l": "UNILEVER", "e": 6, "q": 1, "cu": 11.07, "b": 15.99, "d": 0.0, "v": 15.99, "p": 0.34, "cat": "perf", "pct": 0.34, "acum": 88.2, "rank": 106, "classe": "B"}, {"c": "77982", "n": "LENC PAP KLEENEX KIDS 150UN", "l": "KIMBERLY CLARK", "e": 3, "q": 1, "cu": 6.97, "b": 15.99, "d": 0.0, "v": 15.99, "p": 0.34, "cat": "out", "pct": 0.34, "acum": 88.53, "rank": 107, "classe": "B"}, {"c": "588", "n": "NEOMICINA+BACIT POM DERM 15G", "l": "EMS", "e": 11, "q": 1, "cu": 4.95, "b": 15.06, "d": 0.0, "v": 15.06, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 88.85, "rank": 108, "classe": "B"}, {"c": "64821", "n": "TADALAFILA 20MG 4CP REV EMS", "l": "EMS", "e": 12, "q": 1, "cu": 2.79, "b": 42.28, "d": -27.28, "v": 15.0, "p": 0.32, "cat": "ctrl", "pct": 0.32, "acum": 89.17, "rank": 109, "classe": "B"}, {"c": "31853", "n": "AMITRIPTILINA 25MG 30CP REV", "l": "TEUTO", "e": 9, "q": 1, "cu": 2.43, "b": 22.15, "d": -7.16, "v": 14.99, "p": 0.32, "cat": "ctrl", "pct": 0.32, "acum": 89.49, "rank": 110, "classe": "B"}, {"c": "2201", "n": "BEPANTRIZ POM ASSAD 30G", "l": "CIMED", "e": 15, "q": 1, "cu": 3.99, "b": 14.99, "d": 0.0, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 89.8, "rank": 111, "classe": "B"}, {"c": "77705", "n": "DROPROPIZINA 1,5MG/ML XPE", "l": "ACHE/BIOSINTETICA", "e": 2, "q": 1, "cu": 6.92, "b": 14.99, "d": 0.0, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 90.12, "rank": 112, "classe": "B"}, {"c": "702", "n": "HIDROCORTISONA 10MG/G CR 15G", "l": "TEUTO", "e": 5, "q": 1, "cu": 6.23, "b": 17.77, "d": -2.78, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 90.44, "rank": 113, "classe": "B"}, {"c": "3094", "n": "IBUPRIL 600MG 20CP", "l": "TEUTO", "e": 95, "q": 1, "cu": 3.68, "b": 25.0, "d": -10.01, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 90.76, "rank": 114, "classe": "B"}, {"c": "71464", "n": "IBUPROFENO 100MG/ML GTS 20ML", "l": "GEOLAB", "e": 17, "q": 1, "cu": 3.71, "b": 21.08, "d": -6.09, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 91.07, "rank": 115, "classe": "B"}, {"c": "1204", "n": "LIDOCAINA 50MG/G POM LAR 25G", "l": "EMS", "e": 1, "q": 1, "cu": 7.59, "b": 18.62, "d": -3.63, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 91.39, "rank": 116, "classe": "B"}, {"c": "15724", "n": "TIN COR&TON 4.0 CAS ME 1UN", "l": "LOREAL", "e": 3, "q": 1, "cu": 9.05, "b": 14.99, "d": 0.0, "v": 14.99, "p": 0.32, "cat": "perf", "pct": 0.32, "acum": 91.71, "rank": 117, "classe": "B"}, {"c": "1245", "n": "TRIANCINOLONA 1MG/G POM 10G", "l": "EMS", "e": 9, "q": 1, "cu": 3.93, "b": 17.31, "d": -2.32, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 92.02, "rank": 118, "classe": "B"}, {"c": "77461", "n": "TROMETAMOL 10MG 10CP SUBL", "l": "GERMED", "e": 7, "q": 1, "cu": 4.42, "b": 34.82, "d": -19.83, "v": 14.99, "p": 0.32, "cat": "med", "pct": 0.32, "acum": 92.34, "rank": 119, "classe": "B"}, {"c": "69785", "n": "COMPRESSA NAO ADERENTE C/10", "l": "NÃO DEFINIDO", "e": 155, "q": 5, "cu": 7.0, "b": 14.95, "d": 0.0, "v": 14.95, "p": 0.32, "cat": "out", "pct": 0.32, "acum": 92.66, "rank": 120, "classe": "B"}, {"c": "10999", "n": "SH ELSEVE REP TOT5 200ML", "l": "LOREAL", "e": 2, "q": 1, "cu": 10.98, "b": 16.99, "d": -3.0, "v": 13.99, "p": 0.3, "cat": "perf", "pct": 0.3, "acum": 92.95, "rank": 121, "classe": "B"}, {"c": "467", "n": "MAGNESIA BISUR MENT ENV 10PAST", "l": "ASPEN PHARMA", "e": 25, "q": 1, "cu": 9.18, "b": 13.32, "d": -0.05, "v": 13.27, "p": 0.28, "cat": "med", "pct": 0.28, "acum": 93.23, "rank": 122, "classe": "B"}, {"c": "10780", "n": "CR ALIS HAIRLIFE CAC&NAT 180G", "l": "EMBELLEZE", "e": 1, "q": 1, "cu": 9.63, "b": 12.99, "d": 0.0, "v": 12.99, "p": 0.27, "cat": "perf", "pct": 0.27, "acum": 93.51, "rank": 123, "classe": "B"}, {"c": "68284", "n": "DES MONANGE AER FL LAV 150ML", "l": "COTY", "e": 2, "q": 1, "cu": 7.07, "b": 12.99, "d": 0.0, "v": 12.99, "p": 0.27, "cat": "perf", "pct": 0.27, "acum": 93.78, "rank": 124, "classe": "B"}, {"c": "44868", "n": "DES TENYS PE PO PES SPO 100G", "l": "BARUEL", "e": 2, "q": 1, "cu": 8.62, "b": 12.99, "d": 0.0, "v": 12.99, "p": 0.27, "cat": "perf", "pct": 0.27, "acum": 94.06, "rank": 125, "classe": "B"}, {"c": "544", "n": "DEXAMETASONA 1MG/G CR DERM 10G", "l": "TEUTO", "e": 10, "q": 1, "cu": 2.75, "b": 13.93, "d": -0.94, "v": 12.99, "p": 0.27, "cat": "med", "pct": 0.27, "acum": 94.33, "rank": 126, "classe": "B"}, {"c": "78310", "n": "SIMETICONA 125MG 15CAP MOLE", "l": "BIOLAB SANUS", "e": 18, "q": 1, "cu": 2.57, "b": 19.82, "d": -6.83, "v": 12.99, "p": 0.27, "cat": "med", "pct": 0.27, "acum": 94.61, "rank": 127, "classe": "B"}, {"c": "76249", "n": "MELATONINA 0,21MG S/SAB GTS 20", "l": "CATARINENSE", "e": 1, "q": 1, "cu": 11.63, "b": 11.63, "d": 0.0, "v": 11.63, "p": 0.25, "cat": "med", "pct": 0.25, "acum": 94.86, "rank": 128, "classe": "B"}, {"c": "21181", "n": "ESP AGAFARMA IMPER 5X4,5M", "l": "AGAFARMA", "e": 0, "q": 1, "cu": 5.46, "b": 10.99, "d": 0.0, "v": 10.99, "p": 0.23, "cat": "out", "pct": 0.23, "acum": 95.09, "rank": 129, "classe": "C"}, {"c": "69206", "n": "SALONPAS EMPLASTRO P 10UN", "l": "HISAMITSU", "e": 6, "q": 1, "cu": 6.98, "b": 10.99, "d": 0.0, "v": 10.99, "p": 0.23, "cat": "med", "pct": 0.23, "acum": 95.32, "rank": 130, "classe": "C"}, {"c": "60153", "n": "SINVASTATINA 20MG 30CP REV", "l": "CIMED", "e": 5, "q": 1, "cu": 2.39, "b": 34.84, "d": -24.84, "v": 10.0, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 95.53, "rank": 131, "classe": "C"}, {"c": "781", "n": "SORINAN 0,5MG/ML GTS AD 30ML", "l": "PHARMASCIENCE", "e": 80, "q": 2, "cu": 4.88, "b": 12.0, "d": -2.0, "v": 10.0, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 95.74, "rank": 132, "classe": "C"}, {"c": "12765", "n": "TESTE GRAV CONFIRA TIRA 1UN", "l": "SANFARMA", "e": 110, "q": 1, "cu": 1.21, "b": 10.0, "d": 0.0, "v": 10.0, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 95.96, "rank": 133, "classe": "C"}, {"c": "77647", "n": "ENERGRIP C 1G 10CP EFERV", "l": "VITAMEDIC", "e": 8, "q": 1, "cu": 3.59, "b": 9.99, "d": 0.0, "v": 9.99, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 96.17, "rank": 134, "classe": "C"}, {"c": "71491", "n": "SIMETICONA 75MG/ML GTS 10ML", "l": "ACHE/BIOSINTETICA", "e": 8, "q": 1, "cu": 1.86, "b": 9.99, "d": 0.0, "v": 9.99, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 96.38, "rank": 135, "classe": "C"}, {"c": "393", "n": "SALBUTAMOL XPE 120ML", "l": "GEOLAB", "e": 3, "q": 1, "cu": 6.87, "b": 9.8, "d": 0.0, "v": 9.8, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 96.59, "rank": 136, "classe": "C"}, {"c": "62", "n": "SAL DE FRUTA ENO LAR 2ENV 5G", "l": "HALEON", "e": 54, "q": 2, "cu": 5.08, "b": 9.76, "d": 0.0, "v": 9.76, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 96.79, "rank": 137, "classe": "C"}, {"c": "58", "n": "SAL DE FRUTA ENO GUAR 2ENV 5G", "l": "HALEON", "e": 66, "q": 2, "cu": 5.08, "b": 9.76, "d": -0.03, "v": 9.73, "p": 0.21, "cat": "med", "pct": 0.21, "acum": 97.0, "rank": 138, "classe": "C"}, {"c": "24158", "n": "BARRA CER RITTER MO/CH 22G", "l": "RITTER ALIMENTOS", "e": 27, "q": 3, "cu": 4.23, "b": 8.97, "d": 0.0, "v": 8.97, "p": 0.19, "cat": "perf", "pct": 0.19, "acum": 97.19, "rank": 139, "classe": "C"}, {"c": "73738", "n": "BATOM BELLA FEM 10012 1UN", "l": "BELLA FEMME", "e": 0, "q": 1, "cu": 2.99, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "perf", "pct": 0.17, "acum": 97.36, "rank": 140, "classe": "C"}, {"c": "12204", "n": "DES HERBISSIMO CR FRESH 55G", "l": "DANA PERFUMES", "e": 2, "q": 1, "cu": 4.33, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "perf", "pct": 0.17, "acum": 97.53, "rank": 141, "classe": "C"}, {"c": "67460", "n": "DEXAMETASONA 4MG 10CP", "l": "TEUTO", "e": 7, "q": 1, "cu": 3.07, "b": 16.7, "d": -8.71, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 97.69, "rank": 142, "classe": "C"}, {"c": "64890", "n": "DORFLEX ENV 10CP", "l": "OPELLA/SANOFI", "e": 23, "q": 1, "cu": 5.6, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 97.86, "rank": 143, "classe": "C"}, {"c": "5186", "n": "LOSARTANA POT 50MG 30CP REV", "l": "NEO QUIMICA", "e": 102, "q": 1, "cu": 2.17, "b": 10.34, "d": -2.35, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 98.03, "rank": 144, "classe": "C"}, {"c": "69559", "n": "PARACETAMOL 200MG/ML GTS 15ML", "l": "GREEN PHARMA", "e": 10, "q": 1, "cu": 1.88, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 98.2, "rank": 145, "classe": "C"}, {"c": "11704", "n": "PRES PRUDENCE TRAD 3UN", "l": "DKT DO BRASIL", "e": 2, "q": 1, "cu": 3.74, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 98.37, "rank": 146, "classe": "C"}, {"c": "37916", "n": "RESFENOL ENV 5CAP", "l": "KLEY HERTZ", "e": 39, "q": 1, "cu": 2.91, "b": 7.99, "d": 0.0, "v": 7.99, "p": 0.17, "cat": "med", "pct": 0.17, "acum": 98.54, "rank": 147, "classe": "C"}, {"c": "10623", "n": "TRIDENT CHICLE HOR/MEN 8G", "l": "MONDELEZ", "e": 14, "q": 2, "cu": 3.86, "b": 7.98, "d": 0.0, "v": 7.98, "p": 0.17, "cat": "perf", "pct": 0.17, "acum": 98.71, "rank": 148, "classe": "C"}, {"c": "283", "n": "PARACETAMOL 750MG ENV 10CP", "l": "ZYDUS/NIKKHO", "e": 17, "q": 1, "cu": 1.59, "b": 7.0, "d": 0.0, "v": 7.0, "p": 0.15, "cat": "med", "pct": 0.15, "acum": 98.86, "rank": 149, "classe": "C"}, {"c": "18365", "n": "PASSA FIO DENT POWERLINE 30UN", "l": "IMPOWER", "e": 2, "q": 1, "cu": 5.34, "b": 7.99, "d": -1.0, "v": 6.99, "p": 0.15, "cat": "perf", "pct": 0.15, "acum": 99.0, "rank": 150, "classe": "C"}, {"c": "374", "n": "NEOSORO 0,5MG/ML GTS NAS 30ML", "l": "NEO QUIMICA", "e": 202, "q": 1, "cu": 2.0, "b": 6.0, "d": 0.0, "v": 6.0, "p": 0.13, "cat": "med", "pct": 0.13, "acum": 99.13, "rank": 151, "classe": "C"}, {"c": "13735", "n": "ESPONJA BAN PONJITA 1UN", "l": "3M DO BRASIL", "e": 0, "q": 1, "cu": 3.0, "b": 5.99, "d": 0.0, "v": 5.99, "p": 0.13, "cat": "perf", "pct": 0.13, "acum": 99.26, "rank": 152, "classe": "C"}, {"c": "67008", "n": "REMOV FARMAX C/ACETONA 100ML", "l": "FARMAX DIV.COSM.", "e": 19, "q": 1, "cu": 3.01, "b": 5.99, "d": 0.0, "v": 5.99, "p": 0.13, "cat": "perf", "pct": 0.13, "acum": 99.39, "rank": 153, "classe": "C"}, {"c": "65667", "n": "SORO FISIOL 0,9% SORIMAX 250ML", "l": "FARMAX DIV.COSM.", "e": 14, "q": 1, "cu": 2.17, "b": 5.99, "d": 0.0, "v": 5.99, "p": 0.13, "cat": "med", "pct": 0.13, "acum": 99.51, "rank": 154, "classe": "C"}, {"c": "101", "n": "DIPIRONA 500MG ENV 10CP", "l": "PRATI DONADUZZI", "e": 260, "q": 1, "cu": 1.44, "b": 5.0, "d": 0.0, "v": 5.0, "p": 0.11, "cat": "med", "pct": 0.11, "acum": 99.62, "rank": 155, "classe": "C"}, {"c": "12682", "n": "REFRI COCA COLA ZER 350ML", "l": "COCA COLA", "e": 10, "q": 1, "cu": 1.33, "b": 4.99, "d": 0.0, "v": 4.99, "p": 0.11, "cat": "perf", "pct": 0.11, "acum": 99.72, "rank": 156, "classe": "C"}, {"c": "63", "n": "SAL DE FRUTA ENO TRAD 2ENV 5G", "l": "HALEON", "e": 59, "q": 1, "cu": 2.54, "b": 4.88, "d": 0.0, "v": 4.88, "p": 0.1, "cat": "med", "pct": 0.1, "acum": 99.83, "rank": 157, "classe": "C"}, {"c": "42", "n": "SONRISAL TRAD ENV 2CP EFERV", "l": "HALEON", "e": 19, "q": 1, "cu": 2.2, "b": 3.19, "d": 0.0, "v": 3.19, "p": 0.07, "cat": "med", "pct": 0.07, "acum": 99.89, "rank": 158, "classe": "C"}, {"c": "24991", "n": "HALLS BALA EXT FORT 10UN", "l": "MONDELEZ", "e": 19, "q": 1, "cu": 1.3, "b": 2.5, "d": 0.0, "v": 2.5, "p": 0.05, "cat": "perf", "pct": 0.05, "acum": 99.95, "rank": 159, "classe": "C"}, {"c": "65635", "n": "SERINGA DESCAR 3ML 25X7 1UN", "l": "DESCARPACK BRASIL", "e": 36, "q": 1, "cu": 0.27, "b": 2.5, "d": 0.0, "v": 2.5, "p": 0.05, "cat": "out", "pct": 0.05, "acum": 100.0, "rank": 160, "classe": "C"}];
+const TOTAL = 4726.05;
+
+let listFilter = 'todos';
+let listSearch = '';
+let chartPareto = null, chartPizza = null;
+
+// ─── UTILS ───────────────────────────────────────────────
+const brl = v => 'R$ ' + Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = v => (v*100).toFixed(1)+'%';
+
+const CAT_LABELS = {med:'Medicamento',ctrl:'Controlado',perf:'Perfumaria',out:'Outros'};
+const CAT_CLASS  = {med:'cat-med',ctrl:'cat-ctrl',perf:'cat-perf',out:'cat-out'};
+
+// ─── INIT ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  renderMetrics();
+  renderPareto();
+  renderPizza();
+  renderTop5();
+  renderLista();
+  renderAlertas();
+  renderRel();
+});
+
+// ─── METRICS ─────────────────────────────────────────────
+function renderMetrics() {
+  const nA = PRODS.filter(p=>p.classe==='A').length;
+  const nB = PRODS.filter(p=>p.classe==='B').length;
+  const nC = PRODS.filter(p=>p.classe==='C').length;
+  const ctrl = PRODS.filter(p=>p.cat==='ctrl').length;
+  document.getElementById('cnt-a').textContent = nA;
+  document.getElementById('cnt-b').textContent = nB;
+  document.getElementById('cnt-c').textContent = nC;
+  document.getElementById('cnt-a2').textContent = nA;
+  document.getElementById('cnt-ctrl').textContent = ctrl;
+}
+
+// ─── PARETO ───────────────────────────────────────────────
+function renderPareto() {
+  const top = PRODS.slice(0,15);
+  const labels = top.map(p => p.n.split(' ').slice(0,2).join(' '));
+  const vals = top.map(p => +(p.v.toFixed(2)));
+  const acums = top.map(p => +(p.acum));
+  const colors = top.map(p => p.classe==='A'?'#17a34a':p.classe==='B'?'#d97706':'#dc2626');
+
+  if(chartPareto) chartPareto.destroy();
+  chartPareto = new Chart(document.getElementById('cPareto'), {
+    data: {
+      labels,
+      datasets: [
+        {type:'bar',label:'Vlr. Venda',data:vals,backgroundColor:colors,borderRadius:4,yAxisID:'y'},
+        {type:'line',label:'% Acum.',data:acums,borderColor:'#0067A0',borderWidth:2,
+          pointBackgroundColor:'#0067A0',pointRadius:3,pointBorderColor:'#fff',pointBorderWidth:1.5,
+          tension:.35,yAxisID:'y2',fill:false}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label: ctx => ctx.datasetIndex===0 ? brl(ctx.raw) : ctx.raw+'%'
+      }}},
+      scales:{
+        x:{ticks:{font:{size:8},maxRotation:45,autoSkip:false},grid:{display:false}},
+        y:{ticks:{font:{size:8},callback:v=>'R$'+v},grid:{color:'#f1f5f9'}},
+        y2:{position:'right',min:0,max:100,ticks:{font:{size:8},callback:v=>v+'%'},grid:{display:false}}
+      }
+    }
+  });
+}
+
+// ─── PIZZA ────────────────────────────────────────────────
+function renderPizza() {
+  const fatA = PRODS.filter(p=>p.classe==='A').reduce((s,p)=>s+p.v,0);
+  const fatB = PRODS.filter(p=>p.classe==='B').reduce((s,p)=>s+p.v,0);
+  const fatC = PRODS.filter(p=>p.classe==='C').reduce((s,p)=>s+p.v,0);
+  const colors = ['#17a34a','#d97706','#dc2626'];
+  const data = [fatA,fatB,fatC];
+  const labels = ['Classe A','Classe B','Classe C'];
+
+  if(chartPizza) chartPizza.destroy();
+  chartPizza = new Chart(document.getElementById('cPizza'), {
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}
+  });
+
+  document.getElementById('pizzaLeg').innerHTML = labels.map((l,i)=>`
+  <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+    <span style="width:10px;height:10px;background:${colors[i]};border-radius:2px;flex-shrink:0"></span>
+    <span style="font-size:11px;flex:1">${l}</span>
+    <span style="font-size:11px;font-weight:700;color:var(--az)">${(data[i]/TOTAL*100).toFixed(1)}%</span>
+  </div>`).join('');
+}
+
+// ─── TOP 5 ────────────────────────────────────────────────
+function renderTop5() {
+  document.getElementById('top5').innerHTML = PRODS.slice(0,5).map(p=>`
+  <div class="ali">
+    <div class="ali-dot daz"></div>
+    <div class="ali-nome">${p.n}</div>
+    <div style="text-align:right">
+      <div class="ali-val">${brl(p.v)}</div>
+      <div style="font-size:10px;color:var(--tx3)">${pct(p.v/TOTAL)} do fat.</div>
+    </div>
+  </div>`).join('');
+}
+
+// ─── LISTA ────────────────────────────────────────────────
+function filtList(f,btn) {
+  listFilter = f;
+  document.querySelectorAll('#listaTabs .tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderLista();
+}
+
+function srch(q) { listSearch = q; renderLista(); }
+
+function renderLista() {
+  let lista = [...PRODS];
+  if(listFilter==='A'||listFilter==='B'||listFilter==='C')
+    lista = lista.filter(p=>p.classe===listFilter);
+  else if(listFilter!=='todos')
+    lista = lista.filter(p=>p.cat===listFilter);
+  if(listSearch)
+    lista = lista.filter(p=>(p.n+p.l).toLowerCase().includes(listSearch.toLowerCase()));
+
+  document.getElementById('listaCount').textContent = `${lista.length} produto(s) encontrado(s)`;
+
+  document.getElementById('listaBody').innerHTML = lista.map(p=>`
+  <div class="pcard" onclick="openSheet('${p.c}')">
+    <div class="abc abc${p.classe}">${p.classe}</div>
+    <div class="pcard-info">
+      <div class="pcard-nome">#${p.rank} ${p.n}</div>
+      <div class="pcard-lab">${p.l} &nbsp;·&nbsp; <span class="cat-tag ${CAT_CLASS[p.cat]||'cat-out'}">${CAT_LABELS[p.cat]||p.cat}</span></div>
+      <div class="pcard-row">
+        <div class="pcard-val">${brl(p.v)}</div>
+        <div class="pcard-pct">${p.pct}% do total</div>
+      </div>
+      <div class="abar">
+        <div class="abar-bg"><div class="abar-fill fill${p.classe}" style="width:${Math.min(p.acum,100).toFixed(0)}%"></div></div>
+        <div class="abar-txt">${p.acum}% acum.</div>
+      </div>
+    </div>
+    <div class="pcard-right">
+      <div class="pcard-rank">Cod.${p.c}</div>
+      <div style="font-size:10px;color:var(--tx3)">Qtd: ${p.q}</div>
+    </div>
+  </div>`).join('') || '<div class="empty"><div class="empty-ico">🔍</div>Nenhum produto encontrado.</div>';
+}
+
+// ─── DETAIL SHEET ─────────────────────────────────────────
+function openSheet(cod) {
+  const p = PRODS.find(x=>x.c===cod); if(!p) return;
+  const margem = p.v - p.cu;
+  const pctMargem = p.cu>0?(margem/p.cu*100).toFixed(0):0;
+  document.getElementById('sheetBody').innerHTML = `
+  <div class="sheet-header">
+    <div class="abc abc${p.classe}" style="width:32px;height:32px;font-size:14px">${p.classe}</div>
+    <div>
+      <div class="sheet-nome">${p.n}</div>
+      <div class="sheet-lab">${p.l} &nbsp;·&nbsp; <span class="cat-tag ${CAT_CLASS[p.cat]||'cat-out'}">${CAT_LABELS[p.cat]||p.cat}</span></div>
+    </div>
+  </div>
+  <div class="sheet-grid">
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Vlr. Venda</div>
+      <div class="sheet-item-val" style="color:var(--az)">${brl(p.v)}</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Vlr. Custo</div>
+      <div class="sheet-item-val">${brl(p.cu)}</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Vlr. Bruto</div>
+      <div class="sheet-item-val">${brl(p.b)}</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Desconto</div>
+      <div class="sheet-item-val" style="color:var(--gc)">${p.d!==0?brl(p.d):'—'}</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Qtd. vendida</div>
+      <div class="sheet-item-val">${p.q} un.</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Estoque</div>
+      <div class="sheet-item-val">${p.e} un.</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">Part. %</div>
+      <div class="sheet-item-val">${p.pct}%</div>
+    </div>
+    <div class="sheet-item">
+      <div class="sheet-item-lbl">% Acumulado</div>
+      <div class="sheet-item-val">${p.acum}%</div>
+    </div>
+  </div>
+  <div style="margin-top:12px;background:var(--bg);border-radius:var(--r2);padding:12px">
+    <div class="abar" style="margin-bottom:6px">
+      <div class="abar-bg" style="height:7px"><div class="abar-fill fill${p.classe}" style="width:${Math.min(p.acum,100).toFixed(0)}%;height:7px"></div></div>
+      <div class="abar-txt" style="font-size:11px">${p.acum}% acumulado</div>
+    </div>
+    <div style="font-size:11px;color:var(--tx2)">Margem bruta: <b style="color:var(--ga)">${brl(margem)}</b> (${pctMargem}%)</div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:4px">Código: ${p.c} &nbsp;·&nbsp; Rank: #${p.rank}</div>
+  </div>`;
+  document.getElementById('sheet').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+
+function closeSheet(e) {
+  if(!e||e.target===document.getElementById('sheet')) {
+    document.getElementById('sheet').classList.remove('on');
+    document.body.style.overflow='';
+  }
+}
+
+// ─── ALERTAS ──────────────────────────────────────────────
+function renderAlertas() {
+  const classA = PRODS.filter(p=>p.classe==='A');
+  document.getElementById('alertA').innerHTML = classA.map(p=>`
+  <div class="ali" onclick="openSheet('${p.c}')" style="cursor:pointer">
+    <div class="ali-dot daz"></div>
+    <div class="ali-nome">${p.n}</div>
+    <div style="text-align:right">
+      <div class="ali-val">${brl(p.v)}</div>
+      <div style="font-size:10px;color:var(--tx3)">Est: ${p.e} un.</div>
+    </div>
+  </div>`).join('');
+
+  const ctrl = PRODS.filter(p=>p.cat==='ctrl');
+  document.getElementById('alertCtrl').innerHTML = ctrl.map(p=>`
+  <div class="ali" onclick="openSheet('${p.c}')" style="cursor:pointer">
+    <div class="ali-dot dr"></div>
+    <div class="ali-nome">${p.n}</div>
+    <div style="text-align:right">
+      <div class="ali-val">${brl(p.v)}</div>
+      <div class="badge bc">${p.classe}</div>
+    </div>
+  </div>`).join('') || '<div style="font-size:12px;color:var(--tx3);padding:8px 0">Nenhum controlado identificado.</div>';
+
+  const sug = classA.slice(0,10);
+  document.getElementById('sugList').innerHTML = sug.map(p=>{
+    const qtdSug = Math.round(p.q*2);
+    const unit = p.q>0?p.v/p.q:0;
+    return `<div class="ali">
+      <div class="ali-dot daz"></div>
+      <div class="ali-nome">${p.n}</div>
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;color:var(--az)">${qtdSug} un.</div>
+        <div style="font-size:10px;color:var(--tx3)">${brl(qtdSug*unit)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── RELATÓRIO ────────────────────────────────────────────
+function renderRel() {
+  document.getElementById('relBody').innerHTML = PRODS.map(p=>`
+  <div class="rep-row" onclick="openSheet('${p.c}')" style="cursor:pointer">
+    <div class="rep-rank">#${p.rank}</div>
+    <div class="abc abc${p.classe}" style="flex-shrink:0">${p.classe}</div>
+    <div class="rep-nome">${p.n}</div>
+    <div style="text-align:right">
+      <div class="rep-val">${brl(p.v)}</div>
+      <div style="font-size:10px;color:var(--tx3)">${p.acum}% acum.</div>
+    </div>
+  </div>`).join('');
+}
+
+// ─── EXPORTAÇÃO ───────────────────────────────────────────
+function expCSV() {
+  let csv = 'Rank,Codigo,Produto,Laboratorio,Categoria,Classe,Qtd,Custo,Bruto,Desconto,VlrVenda,Part%,Acum%,Estoque\n';
+  PRODS.forEach(p => {
+    csv += `${p.rank},${p.c},"${p.n}","${p.l}",${p.cat},${p.classe},${p.q},${p.cu},${p.b},${p.d},${p.v},${p.pct},${p.acum},${p.e}\n`;
+  });
+  dl('\uFEFF'+csv,'curva_abc_agafarma_12-03-2026.csv','text/csv;charset=utf-8');
+}
+
+function expHTML() {
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Curva ABC — Agafarma Loja 03 — 12/03/2026</title>
+<style>body{font-family:Arial,sans-serif;margin:20px;font-size:12px}
+h1{color:#0067A0}p{color:#64748b;margin-bottom:16px}
+table{width:100%;border-collapse:collapse}
+th{background:#0067A0;color:#fff;padding:7px 10px;text-align:left;font-size:11px}
+td{padding:6px 10px;border-bottom:1px solid #eee}
+.A{background:#dcfce7;color:#14532d;font-weight:700;padding:2px 7px;border-radius:4px}
+.B{background:#fef3c7;color:#78350f;font-weight:700;padding:2px 7px;border-radius:4px}
+.C{background:#fee2e2;color:#7f1d1d;font-weight:700;padding:2px 7px;border-radius:4px}
+</style></head><body>
+<h1>Agafarma Loja 03 — Curva ABC</h1>
+<p>Período: 12/03/2026 &nbsp;|&nbsp; Faturamento: R$ 4.726,05 &nbsp;|&nbsp; 160 produtos &nbsp;|&nbsp; Gerado: ${new Date().toLocaleDateString('pt-BR')}</p>
+<table><thead><tr><th>#</th><th>Produto</th><th>Lab.</th><th>Classe</th><th>Qtd.</th><th>Vlr.Venda</th><th>Part.%</th><th>% Acum.</th><th>Estoque</th></tr></thead>
+<tbody>${PRODS.map(p=>`<tr><td>${p.rank}</td><td><b>${p.n}</b></td><td>${p.l}</td>
+<td><span class="${p.classe}">${p.classe}</span></td>
+<td>${p.q}</td><td>${brl(p.v)}</td><td>${p.pct}%</td><td>${p.acum}%</td><td>${p.e}</td></tr>`).join('')}
+</tbody></table></body></html>`;
+  dl(html,'relatorio_abc_agafarma_12-03-2026.html','text/html');
+}
+
+function expSug() {
+  let csv = 'Produto,Laboratorio,Classe,Qtd/mes,Estoque,Qtd.Sugerida,Vlr.Unit.,Total\n';
+  PRODS.filter(p=>p.classe!=='C').forEach(p=>{
+    const q=Math.round(p.q*2), u=p.q>0?p.v/p.q:0;
+    csv+=`"${p.n}","${p.l}",${p.classe},${p.q},${p.e},${q},${u.toFixed(2)},${(q*u).toFixed(2)}\n`;
+  });
+  dl('\uFEFF'+csv,'sugestao_compra_agafarma.csv','text/csv;charset=utf-8');
+}
+
+function dl(content,name,type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
+}
+
+// ─── NAVEGAÇÃO ────────────────────────────────────────────
+function pg(id, btn) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('scroll').scrollTop = 0;
+}
+</script>
+</body></html>
