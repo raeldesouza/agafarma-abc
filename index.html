@@ -317,6 +317,177 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
 .cp{background:#fdf4ff;color:#6b21a8} .co{background:#f8fafc;color:var(--tx2)}
 @media(min-width:480px){.mg5{grid-template-columns:repeat(5,1fr)}}
 
+/* ── SIDEBAR BRAND / FOOT — hidden on mobile ─ */
+.sb-brand{display:none}
+.sb-foot{display:none}
+.sb-store-tag{display:none}
+
+/* ══════════════════════════════════════════════
+   DESKTOP LAYOUT — 768px+
+   Sidebar + top header + scrollable content
+══════════════════════════════════════════════ */
+@media(min-width:768px){
+  /* ── Root layout ── */
+  .app{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    grid-template-rows:56px 1fr;
+  }
+
+  /* ── Header: top bar right column ── */
+  .hdr{
+    grid-column:2;grid-row:1;
+    padding:0 24px;
+    height:56px;
+    border-radius:0;
+    box-shadow:0 1px 0 rgba(0,0,0,.12);
+  }
+  .hdr-nome{font-size:14px}
+  .hdr-per{font-size:11px}
+
+  /* ── Sidebar (bnav) ── */
+  .bnav{
+    grid-column:1;grid-row:1/3;
+    flex-direction:column;
+    align-items:stretch;
+    border-top:none;
+    border-right:1px solid rgba(255,255,255,.08);
+    padding:0;
+    background:var(--az2);
+    height:100vh;
+    overflow-y:auto;
+    box-shadow:2px 0 12px rgba(0,0,0,.18);
+  }
+
+  /* ── Sidebar nav buttons ── */
+  .nb{
+    flex-direction:row;
+    justify-content:flex-start;
+    padding:13px 20px;
+    gap:12px;
+    color:rgba(255,255,255,.55);
+    border-left:3px solid transparent;
+    border-radius:0;
+    width:100%;
+    font-family:'Sora',sans-serif;
+    transition:background .15s,color .15s;
+  }
+  .nb:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+  .nb.on{
+    background:rgba(255,255,255,.11);
+    color:#fff;
+    border-left-color:var(--am);
+  }
+  .nb-ico{font-size:17px;line-height:1;flex-shrink:0}
+  .nb-lbl{font-size:12px;font-weight:600;letter-spacing:.2px;flex:1;text-align:left}
+  .nb-dot{display:none}
+
+  /* ── Sidebar brand ── */
+  .sb-brand{
+    display:flex;flex-direction:column;align-items:center;
+    padding:22px 16px 16px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    margin-bottom:4px;
+    flex-shrink:0;
+  }
+  .sb-brand-logo{
+    width:50px;height:50px;border-radius:14px;
+    background:var(--am);color:var(--az2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:900;letter-spacing:-1px;
+    margin-bottom:10px;
+  }
+  .sb-brand-name{font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px}
+  .sb-brand-sub{font-size:9px;color:rgba(255,255,255,.38);letter-spacing:.8px;margin-top:2px}
+
+  /* ── Sidebar footer ── */
+  .sb-foot{
+    display:flex;flex-direction:column;gap:6px;
+    padding:14px 12px 18px;
+    border-top:1px solid rgba(255,255,255,.08);
+    margin-top:auto;
+    flex-shrink:0;
+  }
+  .sb-store-tag{
+    display:block;
+    font-size:10px;color:rgba(255,255,255,.45);
+    padding:0 4px 8px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sb-foot-btn{
+    background:rgba(255,255,255,.07);border:none;
+    color:rgba(255,255,255,.65);border-radius:7px;
+    padding:9px 12px;font-size:11px;font-weight:600;
+    cursor:pointer;text-align:left;
+    font-family:'Sora',sans-serif;
+    transition:background .15s,color .15s;
+  }
+  .sb-foot-btn:hover{background:rgba(255,255,255,.14);color:#fff}
+
+  /* ── Scroll area ── */
+  .scroll{grid-column:2;grid-row:2}
+
+  /* ── Pages: wider, better padding ── */
+  .pg{padding:28px 36px 40px;max-width:1140px;margin:0 auto;width:100%}
+
+  /* ── Metric cards ── */
+  .mc{padding:14px 16px;border-radius:10px}
+  .ml{font-size:11px}
+  .mv{font-size:22px}
+  .ms{font-size:10px}
+  .mg5{gap:10px}
+  .mg3{gap:10px}
+  .mg2{gap:10px}
+
+  /* ── Cards ── */
+  .card{border-radius:10px}
+  .ch{padding:14px 16px 10px}
+  .ct{font-size:13px;font-weight:600}
+  .cb{padding:10px 16px 14px}
+
+  /* ── Dashboard charts: 2-col grid ── */
+  .dash-charts-grid{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:14px;
+  }
+  .dash-charts-grid .card{margin-bottom:0}
+
+  /* Anual + Pareto: full width on left */
+  .dash-chart-wide{grid-column:1}
+  /* Pizza + Top5: stacked on right */
+  .dash-chart-side{grid-column:2}
+
+  /* Taller charts on desktop */
+  #cAnual{height:220px !important}
+  #cPareto{height:250px !important}
+  #cPizza{height:150px !important}
+
+  /* ── Tabs: desktop style ── */
+  .tabs{gap:6px}
+  .tab{padding:7px 14px;font-size:11px}
+
+  /* ── ABC list: wider cards ── */
+  .abc-card{padding:12px 16px}
+  .abc-nome{font-size:13px}
+
+  /* ── Dec cards: 2-col grid ── */
+  .sug-section{display:grid;grid-template-columns:1fr;gap:8px}
+  .sug-section .sug-title{grid-column:1/-1;margin-bottom:0}
+  .dec-card{padding:12px 16px}
+
+  /* ── Inv cards: bigger ── */
+  .inv-card{padding:12px 16px}
+
+  /* ── Strip ── */
+  .strip{padding:14px 18px;border-radius:10px}
+  .sl{font-size:11px}
+  .sv{font-size:22px}
+
+  /* ── Header: hide logo (sidebar has brand) ── */
+  .hdr-logo{display:none}
+}
+
 /* ── STORE CARD v2 ─────────────────────────── */
 .sel-card{flex-direction:column;align-items:stretch;cursor:default}
 .sel-card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
@@ -415,30 +586,35 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
     <div class="mc"><div class="ml">Classe D</div><div class="mv" id="dD" style="color:#7c3aed">&mdash;</div><div class="ms">encomenda</div></div>
     <div class="mc"><div class="ml">Margem</div><div class="mv" id="dMarg" style="font-size:14px;color:var(--ga)">&mdash;</div><div class="ms">m&eacute;dia %</div></div>
   </div>
-  <div class="card">
-    <div class="ch"><div class="ct"><div class="ctb"></div><span id="cATitle">Faturamento anual</span></div></div>
-    <div class="cb" style="padding:10px"><div class="cw" style="height:170px"><canvas id="cAnual"></canvas></div></div>
-  </div>
-  <div class="card">
-    <div class="ch">
-      <div class="ct"><div class="ctb"></div>Pareto &mdash; Top 15</div>
-      <div style="display:flex;gap:5px">
-        <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:7px;height:7px;background:var(--ga);border-radius:2px;display:inline-block"></span>A</span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:7px;height:7px;background:var(--gb);border-radius:2px;display:inline-block"></span>B</span>
-        <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:12px;height:2px;background:var(--az);display:inline-block"></span>acum%</span>
+  <div class="dash-charts-grid">
+    <!-- Coluna esquerda: gráficos de série temporal (largos) -->
+    <div class="card dash-chart-wide">
+      <div class="ch"><div class="ct"><div class="ctb"></div><span id="cATitle">Faturamento anual</span></div></div>
+      <div class="cb" style="padding:10px"><div class="cw" style="height:170px"><canvas id="cAnual"></canvas></div></div>
+    </div>
+    <div class="card dash-chart-wide">
+      <div class="ch">
+        <div class="ct"><div class="ctb"></div>Pareto &mdash; Top 15</div>
+        <div style="display:flex;gap:5px">
+          <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:7px;height:7px;background:var(--ga);border-radius:2px;display:inline-block"></span>A</span>
+          <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:7px;height:7px;background:var(--gb);border-radius:2px;display:inline-block"></span>B</span>
+          <span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx2)"><span style="width:12px;height:2px;background:var(--az);display:inline-block"></span>acum%</span>
+        </div>
+      </div>
+      <div class="cb" style="padding:10px"><div class="cw" style="height:195px"><canvas id="cPareto"></canvas></div></div>
+    </div>
+
+    <!-- Coluna direita: pizza + top5 -->
+    <div class="card dash-chart-side">
+      <div class="ch"><div class="ct"><div class="ctb"></div>Distribui&ccedil;&atilde;o ABC</div></div>
+      <div class="cb" style="display:flex;align-items:center;gap:12px">
+        <div class="cw" style="height:120px;width:120px;flex-shrink:0"><canvas id="cPizza"></canvas></div>
+        <div id="dPLeg" style="flex:1"></div>
       </div>
     </div>
-    <div class="cb" style="padding:10px"><div class="cw" style="height:195px"><canvas id="cPareto"></canvas></div></div>
-  </div>
-  <div class="card">
-    <div class="ch"><div class="ct"><div class="ctb"></div>Top 5 faturamento</div><span class="bdg ba">A</span></div>
-    <div style="padding:6px 14px" id="dTop5"></div>
-  </div>
-  <div class="card">
-    <div class="ch"><div class="ct"><div class="ctb"></div>Distribui&ccedil;&atilde;o ABC</div></div>
-    <div class="cb" style="display:flex;align-items:center;gap:12px">
-      <div class="cw" style="height:120px;width:120px;flex-shrink:0"><canvas id="cPizza"></canvas></div>
-      <div id="dPLeg" style="flex:1"></div>
+    <div class="card dash-chart-side">
+      <div class="ch"><div class="ct"><div class="ctb"></div>Top 5 faturamento</div><span class="bdg ba">A</span></div>
+      <div style="padding:6px 14px" id="dTop5"></div>
     </div>
   </div>
 </div>
@@ -602,12 +778,26 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
 </div><!-- /scroll -->
 
 <nav class="bnav">
+  <!-- Sidebar brand (desktop only) -->
+  <div class="sb-brand">
+    <div class="sb-brand-logo">AG</div>
+    <div class="sb-brand-name">AGAFARMA</div>
+    <div class="sb-brand-sub">GEST&Atilde;O DE ESTOQUE</div>
+  </div>
+
   <button class="nb on" onclick="pg('dash',this)"><div class="nb-ico">&#128202;</div><div class="nb-lbl">Dashboard</div><div class="nb-dot"></div></button>
   <button class="nb" onclick="pg('abc',this)"><div class="nb-ico">&#128203;</div><div class="nb-lbl">Curva ABC</div><div class="nb-dot"></div></button>
   <button class="nb" onclick="pg('inv',this)"><div class="nb-ico">&#11088;</div><div class="nb-lbl">Investir</div><div class="nb-dot"></div></button>
   <button class="nb" onclick="pg('cmp',this)"><div class="nb-ico">&#128722;</div><div class="nb-lbl">Comprar</div><div class="nb-dot"></div></button>
   <button class="nb" onclick="pg('saz',this)"><div class="nb-ico">&#127774;</div><div class="nb-lbl">Sazon.</div><div class="nb-dot"></div></button>
   <button class="nb" onclick="pg('dist',this)"><div class="nb-ico">&#128176;</div><div class="nb-lbl">Pre&ccedil;os</div><div class="nb-dot"></div></button>
+
+  <!-- Sidebar footer (desktop only) -->
+  <div class="sb-foot">
+    <div class="sb-store-tag" id="sbStoreTag">—</div>
+    <button class="sb-foot-btn" onclick="abrirPer()">&#128197; Selecionar per&iacute;odo</button>
+    <button class="sb-foot-btn" onclick="voltarLojas()">&#8644; Trocar loja</button>
+  </div>
 </nav>
 </div>
 
@@ -747,14 +937,17 @@ function entrarLoja(id){
   PS=[...keys]; // todos os períodos para base histórica
   PR=mesclar(PS);
   buildPPIdx();
-  document.getElementById('hN').textContent=BANCO[id].nome;
+  const nomeL=BANCO[id].nome;
+  document.getElementById('hN').textContent=nomeL;
   document.getElementById('hP').textContent=ESTOQUE_ATUAL[id]
     ?'XLS '+new Date(ESTOQUE_ATUAL[id].timestamp).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})
     :'Histórico — '+keys.length+' período(s)';
+  const sbTag=document.getElementById('sbStoreTag');
+  if(sbTag) sbTag.textContent=BANCO[id].ico+' '+nomeL;
   document.getElementById('ovL').classList.add('hide');
   document.getElementById('ovP').classList.add('hide');
   CART={}; updCart();
-  pg('cmp',document.querySelector('.nb:nth-child(4)')); // foca na aba Comprar
+  pg('cmp',document.querySelector('.nb[onclick*="cmp"]')); // foca na aba Comprar
   renderAll();
 }
 
@@ -902,6 +1095,8 @@ function entrar(){
     :labels[0]+' \u2013 '+labels[labels.length-1]+' ('+PS.length+'m)';
   document.getElementById('hN').textContent=BANCO[LID].nome;
   document.getElementById('hP').textContent=label;
+  const sbTagE=document.getElementById('sbStoreTag');
+  if(sbTagE) sbTagE.textContent=BANCO[LID].ico+' '+BANCO[LID].nome;
   document.getElementById('ovP').classList.add('hide');
   CART={}; updCart(); renderAll();
 }
