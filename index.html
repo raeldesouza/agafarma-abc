@@ -546,6 +546,11 @@ const SAZ_DATA={"01": [{"codigo": "64265", "produto": "ENTEROGERMINA PLUS 5FLAC 
 const DIST_NAMES={sc:'Santa Cruz',pf:'Profarma',pp:'Panpharma',ou:'Outro'};
 let DIST_PRICES = JSON.parse(localStorage.getItem('agaf_prices')||'{}');
 // Estrutura: DIST_PRICES[loja][codigo][dist] = preco
+let ESTMIN = JSON.parse(localStorage.getItem('agaf_estmin')||'{}');
+// Estrutura: ESTMIN[loja_codigo] = valor selecionado
+function saveEstmin(){ localStorage.setItem('agaf_estmin', JSON.stringify(ESTMIN)); }
+function getEstmin(l,c){ return (ESTMIN[l+'_'+c] != null) ? ESTMIN[l+'_'+c] : null; }
+function setEstmin(l,c,v){ ESTMIN[l+'_'+c]=v; saveEstmin(); }
 
 function salvarPrecos(){ localStorage.setItem('agaf_prices', JSON.stringify(DIST_PRICES)); }
 function getPreco(loja, cod, dist, custo_ref){
@@ -676,7 +681,7 @@ function mesclar(keys){
       const id=p.codigo||p.produto;
       if(!mapa[id]) mapa[id]={codigo:p.codigo,produto:p.produto,lab:p.lab,
         estoq:p.estoq,cat:p.cat,qtd:0,custo:0,bruto:0,desc:0,vend:0,
-        classe:'',pct:0,acum:0,rank:0};
+        classe:'',pct:0,acum:0,rank:0,estmin_sug:null,estmin_sel:null};
       mapa[id].qtd+=Number(p.qtd)||0;
       mapa[id].custo+=Number(p.custo)||0;
       mapa[id].bruto+=Number(p.bruto)||0;
@@ -686,7 +691,10 @@ function mesclar(keys){
     const ultKey=keys.slice().sort().pop();
     (PP[LID+'_'+ultKey]||[]).forEach(p=>{
       const id=p.codigo||p.produto;
-      if(mapa[id]) mapa[id].estoq=p.estoq;
+      if(mapa[id]){
+        mapa[id].estoq=p.estoq;
+        if(p.estmin_sug!=null) mapa[id].estmin_sug=p.estmin_sug;
+      }
     });
   });
   let lista=Object.values(mapa).filter(p=>p.vend>0);
@@ -701,6 +709,7 @@ function mesclar(keys){
     p.custo=+p.custo.toFixed(2); p.vend=+p.vend.toFixed(2);
     p.margem_pct=p.vend>0?+((p.vend-p.custo)/p.vend*100).toFixed(1):0;
     p.margem_unit=p.qtd>0?+((p.vend-p.custo)/p.qtd).toFixed(2):0;
+    p.estmin_sel=getEstmin(LID, p.codigo);
   });
   return lista;
 }
@@ -811,6 +820,14 @@ function rABC(){
       +'<div class="pv">'+brl(p.vend)+'</div><div class="pp">'+p.pct+'% &middot; Est:'+p.estoq+'</div></div>'
       +'<div class="abar"><div class="abg"><div class="af f'+p.classe+'" style="width:'+Math.min(p.acum,100).toFixed(0)+'%"></div></div>'
       +'<div style="font-size:9px;color:var(--tx3);font-family:\'JetBrains Mono\',monospace">'+p.acum+'%</div></div>'
+      +(p.estmin_sug!=null?'<div style="display:flex;align-items:center;gap:6px;margin-top:5px;padding-top:5px;border-top:1px solid var(--brd);flex-wrap:wrap">'
+        +'<span style="font-size:9px;color:var(--tx3)">Sug.Mín: <b style="color:var(--az)">'+p.estmin_sug+'</b></span>'
+        +'<span style="font-size:9px;color:var(--tx3)">&#183;</span>'
+        +'<span style="font-size:9px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(p.estmin_sel!=null?'var(--ga)':'var(--brd)')+';color:'+(p.estmin_sel!=null?'var(--ga)':'var(--tx3)')+'" '
+        +'onclick="event.stopPropagation();editEstmin(\''+p.codigo+'\')">'
+        +(p.estmin_sel!=null?'Sel: '+p.estmin_sel+' &#9998;':'Sel: — &#9998;')
+        +'</span>'
+        +'</div>':'')
       +'</div></div>';
   }).join('')||'<div style="text-align:center;padding:20px;color:var(--tx3)">Sem resultados.</div>';
 }
@@ -1039,6 +1056,15 @@ function rDist(){
   }).join('')||'<div style="text-align:center;padding:20px;color:var(--tx3)">Sem itens.</div>';
 }
 
+function editEstmin(cod){
+  const p=PR.find(x=>(x.codigo||x.produto)===cod); if(!p)return;
+  const atual=p.estmin_sel!=null?p.estmin_sel:p.estmin_sug;
+  const inp=prompt('Estoque mínimo selecionado para\n'+p.produto.slice(0,30)+':\n(Sugerido: '+p.estmin_sug+')', atual!=null?atual:'');
+  if(inp===null) return;
+  const novo=parseInt(inp);
+  if(!isNaN(novo) && novo>=0){ setEstmin(LID,cod,novo); p.estmin_sel=novo; rABC(); }
+}
+
 function editPreco(e, cod, dk){
   e.stopPropagation();
   const p=PR.find(x=>(x.codigo||x.produto)===cod); if(!p)return;
@@ -1154,7 +1180,9 @@ function oSh(nome){
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
     +[['Vlr. Total',brl(p.vend)],['Vlr. Custo',brl(p.custo)],
       ['Margem%',p.margem_pct+'%'],['Marg. Unit.',brl(p.margem_unit)],
-      ['Qtd. Total',p.qtd+' un.'],['Estoque',p.estoq+' un.']].map(function(x){
+      ['Qtd. Total',p.qtd+' un.'],['Estoque',p.estoq+' un.'],
+      ...(p.estmin_sug!=null?[['Sug. Mín.',p.estmin_sug+' un.'],['Min. Sel.',(p.estmin_sel!=null?p.estmin_sel:'—')+' un.']]:[])
+    ].map(function(x){
       return '<div style="background:var(--bg);border-radius:8px;padding:9px 11px">'
         +'<div style="font-size:9px;font-weight:700;color:var(--tx3);text-transform:uppercase;margin-bottom:2px">'+x[0]+'</div>'
         +'<div style="font-size:14px;font-weight:700;color:var(--tx)">'+x[1]+'</div></div>';
