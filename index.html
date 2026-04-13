@@ -146,6 +146,17 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
 .abc{display:inline-flex;align-items:center;justify-content:center;
   width:24px;height:24px;border-radius:6px;font-size:12px;font-weight:700;flex-shrink:0}
 .abcA{background:var(--ga2);color:var(--ga)} .abcB{background:var(--gb2);color:var(--gb)} .abcC{background:var(--gc2);color:var(--gc)}
+.abcD{background:#ede9fe;color:#7c3aed}
+/* ── MATRIZ XYZ ─ Criticidade Operacional ──────── */
+.xyz{display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;border-radius:3px;font-size:8px;font-weight:700;flex-shrink:0;margin-left:2px;vertical-align:middle}
+.xyzX{background:#dbeafe;color:#1d4ed8}.xyzY{background:#fef3c7;color:#92400e}.xyzZ{background:#fee2e2;color:#991b1b}
+/* ── ALERTA 120 DIAS ─ Capital Imobilizado ─────── */
+.a120{background:#fff7ed;border:1px solid #fed7aa;border-radius:5px;
+  padding:3px 7px;font-size:9px;font-weight:600;color:#c2410c;margin-top:4px;display:flex;align-items:center;gap:3px}
+/* ── PRIORIDADE CZ ─ Criticidade Máxima ───────── */
+.cz-badge{background:#fce7f3;border:1px solid #fbcfe8;border-radius:5px;
+  padding:2px 6px;font-size:9px;font-weight:700;color:#9d174d}
 
 /* ── PCARD ──────────────────────────────────── */
 .pcard{background:var(--w);border-radius:var(--r2);border:1px solid var(--brd);
@@ -160,7 +171,7 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
 .abar{display:flex;align-items:center;gap:5px;margin-top:4px}
 .abg{flex:1;height:3px;background:var(--brd);border-radius:2px;overflow:hidden}
 .af{height:100%;border-radius:2px}
-.fA{background:var(--ga)} .fB{background:var(--gb)} .fC{background:var(--gc)}
+.fA{background:var(--ga)} .fB{background:var(--gb)} .fC{background:var(--gc)} .fD{background:#7c3aed}
 
 /* ── COMPARADOR DE PREÇOS ───────────────────── */
 .dist-card{background:var(--w);border-radius:var(--r2);border:1px solid var(--brd);
@@ -343,7 +354,8 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
     <div class="mc"><div class="ml">Produtos</div><div class="mv" id="dTot">&mdash;</div><div class="ms">SKUs</div></div>
     <div class="mc"><div class="ml">Classe A</div><div class="mv" id="dA" style="color:var(--ga)">&mdash;</div><div class="ms">cr&iacute;ticos</div><div class="bdg ba">80%</div></div>
     <div class="mc"><div class="ml">Classe B</div><div class="mv" id="dB" style="color:var(--gb)">&mdash;</div><div class="ms">moderado</div></div>
-    <div class="mc"><div class="ml">Classe C</div><div class="mv" id="dC" style="color:var(--gc)">&mdash;</div><div class="ms">baixo</div></div>
+    <div class="mc"><div class="ml">Classe C</div><div class="mv" id="dC" style="color:var(--gc)">&mdash;</div><div class="ms">baixo giro</div></div>
+    <div class="mc"><div class="ml">Classe D</div><div class="mv" id="dD" style="color:#7c3aed">&mdash;</div><div class="ms">encomenda</div></div>
     <div class="mc"><div class="ml">Margem</div><div class="mv" id="dMarg" style="font-size:14px;color:var(--ga)">&mdash;</div><div class="ms">m&eacute;dia %</div></div>
   </div>
   <div class="card">
@@ -381,6 +393,8 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
     <button class="tab" onclick="fA('A',this)">Classe A</button>
     <button class="tab" onclick="fA('B',this)">Classe B</button>
     <button class="tab" onclick="fA('C',this)">Classe C</button>
+    <button class="tab" onclick="fA('D',this)">&#128230; Encomenda</button>
+    <button class="tab" onclick="fA('alerta',this)">&#9888; Alertas</button>
     <button class="tab" onclick="fA('med',this)">Med.</button>
     <button class="tab" onclick="fA('ctrl',this)">Ctrl.</button>
     <button class="tab" onclick="fA('perf',this)">Perf.</button>
@@ -404,6 +418,7 @@ html,body{height:100%;overflow:hidden;font-family:'Sora',sans-serif;background:v
     <button class="tab on" onclick="fInv('estrela',this)">&#11088; Estrelas</button>
     <button class="tab" onclick="fInv('alta_marg',this)">&#128200; Alta Margem</button>
     <button class="tab" onclick="fInv('sazonal',this)">&#127774; Sazonais</button>
+    <button class="tab" onclick="fInv('cz',this)">&#9888; Prio. CZ</button>
     <button class="tab" onclick="fInv('todos',this)">Todos A</button>
   </div>
   <div id="invBody"></div>
@@ -674,44 +689,119 @@ function entrar(){
 // ═══════════════════════════════════════════════════════════
 // MESCLAR PERÍODOS
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// MOTOR ABC — Curva de Pareto para Farmácias
+// Ref: Viana (2011) Gestão de Estoques Farmacêuticos
+// Cortes Pareto: A ≤ 80% | B ≤ 95% | C > 95% | D = encomenda
+// ═══════════════════════════════════════════════════════════
 function mesclar(keys){
   const mapa={};
+
+  // 1. Acumular vendas de todos os períodos selecionados
+  //    vend = preço_unitário × qtd_vendida (calculado pelo ERP Trier)
   keys.forEach(k=>{
     (PP[LID+'_'+k]||[]).forEach(p=>{
       const id=p.codigo||p.produto;
       if(!mapa[id]) mapa[id]={codigo:p.codigo,produto:p.produto,lab:p.lab,
         estoq:p.estoq,cat:p.cat,qtd:0,custo:0,bruto:0,desc:0,vend:0,
-        classe:'',pct:0,acum:0,rank:0,estmin_sug:null,estmin_sel:null};
+        classe:'',xyz:'Y',pct:0,acum:0,rank:0,estmin_sug:null,estmin_sel:null,
+        periodos_com_venda:0,alerta120:false};
+      if(Number(p.vend)>0) mapa[id].periodos_com_venda++;
       mapa[id].qtd+=Number(p.qtd)||0;
       mapa[id].custo+=Number(p.custo)||0;
       mapa[id].bruto+=Number(p.bruto)||0;
       mapa[id].desc+=Number(p.desc)||0;
       mapa[id].vend+=Number(p.vend)||0;
     });
-    const ultKey=keys.slice().sort().pop();
-    (PP[LID+'_'+ultKey]||[]).forEach(p=>{
-      const id=p.codigo||p.produto;
-      if(mapa[id]){
-        mapa[id].estoq=p.estoq;
-        if(p.estmin_sug!=null) mapa[id].estmin_sug=p.estmin_sug;
-      }
-    });
   });
-  let lista=Object.values(mapa).filter(p=>p.vend>0);
+
+  // 2. Atualizar estoque e estoque mínimo com dados do período mais recente
+  const ultKey=keys.slice().sort().pop();
+  (PP[LID+'_'+ultKey]||[]).forEach(p=>{
+    const id=p.codigo||p.produto;
+    if(mapa[id]){
+      mapa[id].estoq=p.estoq;
+      if(p.estmin_sug!=null) mapa[id].estmin_sug=p.estmin_sug;
+    }
+  });
+
+  const todosItens=Object.values(mapa);
+
+  // 3. Separar itens com venda (A/B/C) de itens sem venda no período (Classe D)
+  //    Classe D = produto catalogado sem saída no período → gestão exclusiva por encomenda
+  //    Ref: CFF Resolução 578/2013 — controle de medicamentos por demanda específica
+  const lista=todosItens.filter(p=>p.vend>0);
+  const listaD=todosItens.filter(p=>p.vend===0);
+
+  // 4. Ordenação ESTRITAMENTE DECRESCENTE pelo impacto financeiro
+  //    Obrigatório ANTES do cálculo acumulado — regra fundamental do Pareto
   lista.sort((a,b)=>b.vend-a.vend);
+
+  // 5. Calcular Participação Individual e Acumulada; classificar A / B / C
+  //    Cortes Pareto exatos: A ≤ 80% | B 80–95% | C 95–100%
   const total=lista.reduce((s,p)=>s+p.vend,0);
   let acum=0;
   lista.forEach((p,i)=>{
     p.pct=total>0?+((p.vend/total*100).toFixed(2)):0;
     acum+=total>0?p.vend/total:0;
     p.acum=+(acum*100).toFixed(2);
-    p.rank=i+1; p.classe=acum<=0.80?'A':acum<=0.95?'B':'C';
-    p.custo=+p.custo.toFixed(2); p.vend=+p.vend.toFixed(2);
+    p.rank=i+1;
+    p.classe=acum<=0.80?'A':acum<=0.95?'B':'C';
+    p.custo=+p.custo.toFixed(2);
+    p.vend=+p.vend.toFixed(2);
     p.margem_pct=p.vend>0?+((p.vend-p.custo)/p.vend*100).toFixed(1):0;
     p.margem_unit=p.qtd>0?+((p.vend-p.custo)/p.qtd).toFixed(2):0;
-    p.estmin_sel=getEstmin(LID, p.codigo);
+    p.estmin_sel=getEstmin(LID,p.codigo);
+    // Alerta 120 dias: item C vendendo em ≤1 dos últimos 4+ períodos selecionados
+    // Sinaliza risco de capital imobilizado e perda por vencimento
+    // Ref: RDC 44/2010 ANVISA — controle de perdas em farmácias
+    p.alerta120=p.classe==='C'&&p.periodos_com_venda<=1&&keys.length>=4;
   });
-  return lista;
+
+  // 6. Matriz XYZ — Coeficiente de Variação da demanda histórica completa
+  //    X: previsível (CV<0.25) | Y: moderado (CV 0.25–0.75) | Z: crítico (CV≥0.75)
+  //    Cruzamento CZ = baixo faturamento + alta criticidade → estoque de segurança absoluto
+  const todosPeriodosLoja=Object.keys(BANCO[LID]?.periodos||{});
+  lista.forEach(p=>{
+    p.xyz=calcXYZ(p.codigo,todosPeriodosLoja);
+    p.prioridade=p.classe+p.xyz; // ex: 'AX','AZ','CZ','BY'
+  });
+
+  // 7. Finalizar Classe D (encomenda exclusiva — fora da curva Pareto)
+  listaD.forEach((p,i)=>{
+    p.classe='D'; p.xyz=''; p.prioridade='D';
+    p.rank=lista.length+i+1;
+    p.pct=0; p.acum=100;
+    p.custo=+p.custo.toFixed(2);
+    p.margem_pct=0; p.margem_unit=0;
+    p.estmin_sel=getEstmin(LID,p.codigo);
+    p.alerta120=false;
+  });
+
+  return [...lista,...listaD];
+}
+
+// ═══════════════════════════════════════════════════════════
+// MATRIZ XYZ — Coeficiente de Variação (CV) da Demanda
+// Ref: Pozo (2010) Administração de Materiais e Recursos Patrimoniais
+// X: CV < 0.25 — demanda previsível, reposição automática segura
+// Y: CV 0.25–0.75 — variação moderada, revisão mensal
+// Z: CV ≥ 0.75 — demanda errática, estoque de segurança elevado
+//    Itens Z sem substitutos: ruptura = risco operacional ou à vida
+// ═══════════════════════════════════════════════════════════
+function calcXYZ(codigo,periodos){
+  if(!periodos||periodos.length<3) return 'Y';
+  const vendas=periodos.map(k=>{
+    const arr=PP[LID+'_'+k]||[];
+    const p=arr.find(x=>x.codigo===codigo);
+    return p?Number(p.vend)||0:0;
+  });
+  const n=vendas.length;
+  const mean=vendas.reduce((s,v)=>s+v,0)/n;
+  if(mean<0.01) return 'Z'; // Sem histórico consistente → tratar como crítico
+  const variance=vendas.reduce((s,v)=>s+Math.pow(v-mean,2),0)/n;
+  const cv=Math.sqrt(variance)/mean;
+  return cv<0.25?'X':cv<0.75?'Y':'Z';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -737,6 +827,7 @@ function rDash(){
   document.getElementById('dA').textContent=PR.filter(p=>p.classe==='A').length;
   document.getElementById('dB').textContent=PR.filter(p=>p.classe==='B').length;
   document.getElementById('dC').textContent=PR.filter(p=>p.classe==='C').length;
+  document.getElementById('dD').textContent=PR.filter(p=>p.classe==='D').length;
   document.getElementById('mesesTags').innerHTML=PS.slice().sort().map(k=>
     '<span class="mes-tag">'+pers[k].label+'</span>').join('');
 
@@ -805,37 +896,54 @@ function fS(q){aS=q;rABC();}
 function rABC(){
   if(!PR.length)return;
   let L=[...PR];
-  if(['A','B','C'].includes(aF))L=L.filter(p=>p.classe===aF);
-  else if(aF!=='todos')L=L.filter(p=>p.cat===aF);
-  if(aS)L=L.filter(p=>(p.produto+p.lab).toLowerCase().includes(aS.toLowerCase()));
-  document.getElementById('abcCnt').textContent=L.length+' produto(s)';
+  // Filtro: A/B/C/D por classe, 'alerta' para itens em risco, ou por categoria
+  if(['A','B','C','D'].includes(aF)) L=L.filter(p=>p.classe===aF);
+  else if(aF==='alerta') L=L.filter(p=>p.alerta120);
+  else if(aF!=='todos') L=L.filter(p=>p.cat===aF);
+  if(aS) L=L.filter(p=>(p.produto+p.lab).toLowerCase().includes(aS.toLowerCase()));
+
+  const nAlerta=PR.filter(p=>p.alerta120).length;
+  document.getElementById('abcCnt').textContent=L.length+' produto(s)'+(nAlerta?' · ⚠️ '+nAlerta+' alertas 120d':'');
+
   document.getElementById('abcBody').innerHTML=L.slice(0,100).map(p=>{
     const esc=p.produto.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    // Badge XYZ: mostra criticidade operacional ao lado do badge ABC
+    const xyzBadge=p.xyz?'<span class="xyz xyz'+p.xyz+'">'+p.xyz+'</span>':'';
+    // Badge CZ: prioridade máxima — baixo faturamento mas demanda errática (sem substituto)
+    const czBadge=p.prioridade==='CZ'?'<span class="cz-badge">&#9888; CZ</span> ':'';
+    // Alerta 120 dias: capital imobilizado / risco de vencimento
+    const alertaHtml=p.alerta120
+      ?'<div class="a120">&#128308; +120 dias sem giro regular &mdash; risco de vencimento</div>':'' ;
     return '<div class="pcard" onclick="oSh(\''+esc+'\')">'
-      +'<div class="abc abc'+p.classe+'">'+p.classe+'</div>'
-      +'<div class="pi"><div class="pn">#'+p.rank+' '+p.produto+'</div>'
+      +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0">'
+      +'<div class="abc abc'+p.classe+'">'+p.classe+'</div>'+xyzBadge
+      +'</div>'
+      +'<div class="pi"><div class="pn">'+(p.classe!=='D'?'#'+p.rank+' ':'')+czBadge+p.produto+'</div>'
       +'<div class="pl">'+p.lab+' &middot; <span class="ctag '+(CC[p.cat]||'co')+'">'+(CL[p.cat]||p.cat)+'</span>'
       +' &middot; margem '+p.margem_pct+'%</div>'
-      +'<div style="display:flex;align-items:center;gap:6px">'
-      +'<div class="pv">'+brl(p.vend)+'</div><div class="pp">'+p.pct+'% &middot; Est:'+p.estoq+'</div></div>'
-      +'<div class="abar"><div class="abg"><div class="af f'+p.classe+'" style="width:'+Math.min(p.acum,100).toFixed(0)+'%"></div></div>'
-      +'<div style="font-size:9px;color:var(--tx3);font-family:\'JetBrains Mono\',monospace">'+p.acum+'%</div></div>'
+      +(p.classe!=='D'
+        ?'<div style="display:flex;align-items:center;gap:6px">'
+          +'<div class="pv">'+brl(p.vend)+'</div><div class="pp">'+p.pct+'% &middot; Est:'+p.estoq+'</div></div>'
+          +'<div class="abar"><div class="abg"><div class="af f'+p.classe+'" style="width:'+Math.min(p.acum,100).toFixed(0)+'%"></div></div>'
+          +'<div style="font-size:9px;color:var(--tx3);font-family:\'JetBrains Mono\',monospace">'+p.acum+'%</div></div>'
+        :'<div style="font-size:10px;color:#7c3aed;margin-top:2px">&#128230; Gestão por encomenda &middot; Est: '+p.estoq+'</div>')
+      +alertaHtml
       +(p.estmin_sug!=null?'<div style="display:flex;align-items:center;gap:6px;margin-top:5px;padding-top:5px;border-top:1px solid var(--brd);flex-wrap:wrap">'
-        +'<span style="font-size:9px;color:var(--tx3)">Sug.Mín: <b style="color:var(--az)">'+p.estmin_sug+'</b></span>'
+        +'<span style="font-size:9px;color:var(--tx3)">Sug.M&iacute;n: <b style="color:var(--az)">'+p.estmin_sug+'</b></span>'
         +'<span style="font-size:9px;color:var(--tx3)">&#183;</span>'
         +'<span style="font-size:9px;cursor:pointer;padding:2px 6px;border-radius:10px;border:1px solid '+(p.estmin_sel!=null?'var(--ga)':'var(--brd)')+';color:'+(p.estmin_sel!=null?'var(--ga)':'var(--tx3)')+'" '
         +'onclick="event.stopPropagation();editEstmin(\''+p.codigo+'\')">'
-        +(p.estmin_sel!=null?'Sel: '+p.estmin_sel+' &#9998;':'Sel: — &#9998;')
-        +'</span>'
-        +'</div>':'')
+        +(p.estmin_sel!=null?'Sel: '+p.estmin_sel+' &#9998;':'Sel: &mdash; &#9998;')
+        +'</span></div>':'')
       +'</div></div>';
   }).join('')||'<div style="text-align:center;padding:20px;color:var(--tx3)">Sem resultados.</div>';
 }
 
 // ═══════════════════════════════════════════════════════════
-// ABA INVESTIR — ABC + Margem + Sazonalidade
-// Inspirado em: samirsaci/product-segmentation (ABC + variabilidade)
-// e dwoo-work/multi-criteria-abc-segmentation (Matriz de Kraljic)
+// ABA INVESTIR — ABC + Margem + Sazonalidade + Matriz XYZ
+// Ref: samirsaci/product-segmentation (ABC + variabilidade)
+// Cruzamento CZ: baixo faturamento + alta criticidade →
+//   exige estoque de segurança absoluto mesmo fora da Classe A
 // ═══════════════════════════════════════════════════════════
 function fInv(f,btn){invFilt=f;document.querySelectorAll('#invTabs .tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');rInv();}
 
@@ -844,36 +952,60 @@ function rInv(){
   const saz=SAZ_DATA[LID]||[];
   const sazMap={};
   saz.forEach(s=>{ sazMap[s.codigo]=s; });
-
   const n=Math.max(1,PS.length);
+
+  // Classe A: candidatos a investimento
   let L=PR.filter(p=>p.classe==='A').map(p=>{
     const s=sazMap[p.codigo]||{};
-    // Estrela: Classe A + margem > 30% + sazonalidade neutra (estável)
-    const isEstrela = p.margem_pct>30 && (s.saz_idx||1)<1.5 && (s.saz_idx||1)>0.5;
-    const isAltaMarg = p.margem_pct>35;
-    const isSazonal = (s.saz_idx||1)>1.5;
-    return {...p, saz_idx: s.saz_idx||1, isEstrela, isAltaMarg, isSazonal,
-      med_mensal: +(p.vend/n).toFixed(2)};
+    // Estrela: Classe A + margem > 30% + demanda estável (saz neutro + XYZ previsível)
+    const isEstrela=p.margem_pct>30&&(s.saz_idx||1)<1.5&&(s.saz_idx||1)>0.5&&p.xyz!=='Z';
+    const isAltaMarg=p.margem_pct>35;
+    const isSazonal=(s.saz_idx||1)>1.5;
+    // AZ: alto faturamento + demanda errática → monitoramento diário, múltiplos fornecedores
+    const isAZ=p.xyz==='Z';
+    return {...p,saz_idx:s.saz_idx||1,isEstrela,isAltaMarg,isSazonal,isAZ,
+      med_mensal:+(p.vend/n).toFixed(2)};
   });
+
+  // Itens CZ: baixo faturamento mas criticidade máxima → garantir estoque de segurança absoluto
+  // Ref: Matriz de Kraljic — itens estratégicos mesmo sem alto giro
+  const listaCZ=PR.filter(p=>p.prioridade==='CZ').map(p=>({...p,
+    saz_idx:(sazMap[p.codigo]||{}).saz_idx||1,
+    med_mensal:+(p.vend/n).toFixed(2),
+    isEstrela:false,isAltaMarg:false,isSazonal:false,isAZ:false,isCZ:true}));
 
   if(invFilt==='estrela') L=L.filter(p=>p.isEstrela);
   else if(invFilt==='alta_marg') L=L.filter(p=>p.isAltaMarg);
   else if(invFilt==='sazonal') L=L.filter(p=>p.isSazonal);
+  else if(invFilt==='cz'){L=listaCZ;}
   L.sort((a,b)=>b.vend-a.vend);
 
-  document.getElementById('invBody').innerHTML=L.slice(0,60).map(p=>{
+  // Aviso CZ sempre visível (exceto quando o filtro CZ já está ativo)
+  const czN=listaCZ.length;
+  const czAviso=invFilt!=='cz'&&czN>0
+    ?'<div style="background:#fce7f3;border:1px solid #fbcfe8;border-radius:var(--r);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">'
+      +'<div style="font-size:18px">&#9888;&#65039;</div>'
+      +'<div><div style="font-size:11px;font-weight:700;color:#9d174d">'+czN+' item(ns) Prioridade CZ</div>'
+      +'<div style="font-size:10px;color:#9d174d">Baixo faturamento, alta criticidade operacional &mdash; estoque de seguran&ccedil;a obrigat&oacute;rio</div></div>'
+      +'<button style="margin-left:auto;background:#9d174d;color:#fff;border:none;border-radius:20px;padding:5px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:\'Sora\',sans-serif" '
+      +'onclick="fInv(\'cz\',document.querySelector(\'#invTabs .tab:last-child\'))">Ver CZ</button>'
+      +'</div>':'' ;
+
+  function cardInv(p){
     const margPct=Math.min(p.margem_pct,100);
     const badges=[];
+    if(p.isCZ) badges.push('<span class="cz-badge">&#9888; CZ &mdash; Prioridade M&aacute;xima</span>');
     if(p.isEstrela) badges.push('<span class="inv-badge inv-estrela">&#11088; Estrela</span>');
     if(p.isAltaMarg) badges.push('<span class="inv-badge inv-trending">&#128200; Alta Margem</span>');
     if(p.isSazonal) badges.push('<span class="inv-badge inv-alta">&#127774; Sazonal x'+p.saz_idx+'</span>');
-
+    if(p.isAZ) badges.push('<span class="inv-badge" style="background:#fee2e2;color:#991b1b">&#128308; AZ &mdash; Monitor Diário</span>');
+    const xyzInfo=p.xyz?'<span class="xyz xyz'+p.xyz+'" style="width:auto;padding:0 5px">'+p.xyz+'</span> ':'';
     return '<div class="inv-card" onclick="oSh(\''+p.produto.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">'
       +'<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">'
-      +'<div class="abc abcA">A</div>'
+      +'<div class="abc abc'+(p.isCZ?'C':p.classe)+'">'+p.classe+'</div>'
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.produto+'</div>'
-      +'<div style="font-size:10px;color:var(--tx3)">'+p.lab+'</div>'
+      +'<div style="font-size:10px;color:var(--tx3);display:flex;align-items:center;gap:4px">'+p.lab+' '+xyzInfo+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">'+badges.join('')+'</div>'
       +'</div>'
       +'<div style="text-align:right;flex-shrink:0">'
@@ -885,19 +1017,42 @@ function rInv(){
       +'<span>Margem bruta</span><span>'+brl(p.vend-p.custo)+'</span></div>'
       +'<div class="margem-bar"><div class="margem-fill" style="width:'+margPct+'%"></div></div>'
       +'</div></div>';
-  }).join('')||'<div style="text-align:center;padding:24px;color:var(--tx3)">Nenhum produto neste filtro.</div>';
+  }
+
+  document.getElementById('invBody').innerHTML=czAviso
+    +L.slice(0,60).map(cardInv).join('')
+    ||'<div style="text-align:center;padding:24px;color:var(--tx3)">Nenhum produto neste filtro.</div>';
 }
 
 // ═══════════════════════════════════════════════════════════
 // SUGESTÃO INTELIGENTE DE COMPRA
+// Ref: Dias (2010) Administração de Materiais — reposição por ponto de pedido
+// Estratégia Classe A: monitoramento diário, múltiplos fornecedores (evitar ruptura)
+// Sazonalidade: compara giro atual com histórico 60–90 dias para detectar mudança de categoria
 // ═══════════════════════════════════════════════════════════
 function rSug(){
   if(!PR.length)return;
   const n=Math.max(1,PS.length);
-  const mesAtual=new Date().getMonth()+1; // 1-12
+  const mesAtual=new Date().getMonth()+1;
   const mesesAlta=[1,2,3,12];
   const isAlta=mesesAlta.includes(mesAtual);
   const nomeMes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mesAtual-1];
+
+  // Detectar produtos que subiram de categoria (aumento recente de demanda)
+  // Compara média dos últimos 2 períodos com média histórica (60–90 dias)
+  const todosPeriodos=Object.keys(BANCO[LID]?.periodos||{}).sort();
+  const periRecentes=todosPeriodos.slice(-2);
+  const periHistorico=todosPeriodos.slice(-5,-2);
+
+  function mediaVendas(codigo,periodos){
+    let soma=0,cnt=0;
+    periodos.forEach(k=>{
+      const arr=PP[LID+'_'+k]||[];
+      const p=arr.find(x=>x.codigo===codigo);
+      if(p){soma+=Number(p.vend)||0;cnt++;}
+    });
+    return cnt>0?soma/cnt:0;
+  }
 
   document.getElementById('sugMes').textContent=
     'M\u00eas atual: '+nomeMes+' \u00b7 '+(isAlta?'\u2600\ufe0f Alta temporada':'Baixa temporada')
@@ -907,47 +1062,72 @@ function rSug(){
   const sazMap={};
   saz.forEach(s=>{ sazMap[s.codigo]=s; });
 
-  const comprar=[], moderado=[], evitar=[];
+  const comprar=[],moderado=[],evitar=[];
+
   PR.filter(p=>p.classe==='A'||p.classe==='B').forEach(p=>{
     const s=sazMap[p.codigo]||{saz_idx:1};
     const medMensal=p.vend/n;
-    // Ajuste sazonal: se estamos na alta e produto é sazonal de alta, aumentar sugestão
-    const fatorSaz = isAlta ? (s.saz_idx>1.3?s.saz_idx:1) : (s.saz_idx>1.3?1/s.saz_idx:1);
-    const qtdSug = Math.round((p.qtd/n) * fatorSaz * 1.1); // +10% de segurança
-    const preco=getPreco(LID, p.codigo, 'sc', p.custo/Math.max(1,p.qtd));
 
-    const item={...p, qtdSug, fatorSaz:+fatorSaz.toFixed(2), preco, medMensal};
-    // Lógica de recomendação
-    if(p.classe==='A' && (isAlta?s.saz_idx>=1:s.saz_idx<1.3)) comprar.push(item);
-    else if(p.classe==='A') moderado.push(item);
+    // Ajuste sazonal: alta temporada + produto sazonal → aumentar pedido
+    // Baixa temporada + produto sazonal de alta → reduzir pedido (evitar encalhe)
+    const fatorSaz=isAlta?(s.saz_idx>1.3?s.saz_idx:1):(s.saz_idx>1.3?1/s.saz_idx:1);
+
+    // Fator XYZ: itens Z recebem +20% de estoque de segurança adicional
+    // Ref: fórmula estoque segurança = z × σ × √lead_time (simplificada)
+    const fatorXYZ=p.xyz==='Z'?1.2:p.xyz==='Y'?1.1:1.0;
+
+    const qtdSug=Math.max(1,Math.round((p.qtd/n)*fatorSaz*fatorXYZ));
+    const preco=getPreco(LID,p.codigo,'sc',p.custo/Math.max(1,p.qtd));
+
+    // Detectar mudança de categoria: crescimento ≥ 40% nos últimos 60–90 dias
+    const medRec=mediaVendas(p.codigo,periRecentes);
+    const medHist=mediaVendas(p.codigo,periHistorico);
+    const subindoCategoria=medHist>0&&medRec/medHist>=1.4;
+
+    const item={...p,qtdSug,fatorSaz:+fatorSaz.toFixed(2),fatorXYZ,preco,medMensal,subindoCategoria};
+
+    // Classe A: monitoramento diário obrigatório (evitar ruptura de itens críticos)
+    // Classe B que está subindo de categoria: tratar como Classe A para compra
+    if(p.classe==='A'&&(isAlta?s.saz_idx>=1:s.saz_idx<1.3)) comprar.push(item);
+    else if(p.classe==='A'||subindoCategoria) moderado.push(item);
     else evitar.push(item);
   });
+
+  // Itens CZ: garantia de estoque independente de sazonalidade
+  const czUrgentes=PR.filter(p=>p.prioridade==='CZ'&&p.estoq<=0);
 
   document.getElementById('sugNcmp').textContent=comprar.length;
   document.getElementById('sugNmod').textContent=moderado.length;
   document.getElementById('sugNev').textContent=evitar.length;
 
-  function renderSugList(lista, cor, lbl){
+  function renderSugList(lista,cor,lbl){
     if(!lista.length)return '';
     return '<div class="sug-section">'
       +'<div class="sug-title sug-'+cor+'">'+lbl+' ('+lista.length+')</div>'
-      +lista.slice(0,15).map(p=>
-        '<div class="sug-item">'
-        +'<div class="sug-item-l sug-l-'+cor+'"></div>'
-        +'<div class="sug-info">'
-        +'<div class="sug-nome">'+p.produto+'</div>'
-        +'<div class="sug-det">M\u00e9dia: '+Math.round(p.medMensal/1)||1+' un./m\u00eas'
-        +(p.fatorSaz!==1?' \u00b7 fator saz. x'+p.fatorSaz:'')
-        +' \u00b7 Est: '+p.estoq+'</div>'
-        +'</div>'
-        +'<div class="sug-qtd">'
-        +'<div class="sug-qtd-val">'+p.qtdSug+'</div>'
-        +'<div class="sug-qtd-lbl">un. suger.</div>'
-        +'</div></div>'
-      ).join('')+'</div>';
+      +lista.slice(0,15).map(p=>{
+        const xyzTag=p.xyz?'<span class="xyz xyz'+p.xyz+'" style="width:auto;padding:0 4px">'+p.xyz+'</span> ':'';
+        const subTag=p.subindoCategoria?'<span style="font-size:8px;background:#d1fae5;color:#065f46;border-radius:3px;padding:1px 4px;font-weight:700">&#128200; subindo categ.</span> ':'';
+        return '<div class="sug-item">'
+          +'<div class="sug-item-l sug-l-'+cor+'"></div>'
+          +'<div class="sug-info">'
+          +'<div class="sug-nome">'+p.produto+' '+xyzTag+subTag+'</div>'
+          +'<div class="sug-det">M\u00e9dia: '+Math.round(medMensal=>medMensal,p.medMensal)||1+' un./m\u00eas'
+          +(p.fatorSaz!==1?' \u00b7 saz. x'+p.fatorSaz:'')
+          +(p.fatorXYZ!==1?' \u00b7 seg. x'+p.fatorXYZ:'')
+          +' \u00b7 Est: '+p.estoq+'</div>'
+          +'</div>'
+          +'<div class="sug-qtd">'
+          +'<div class="sug-qtd-val">'+p.qtdSug+'</div>'
+          +'<div class="sug-qtd-lbl">un. suger.</div>'
+          +'</div></div>';
+      }).join('')+'</div>';
   }
-  document.getElementById('sugBody').innerHTML=
-    renderSugList(comprar,'verde','&#9989; Comprar agora')
+
+  const czAviso=czUrgentes.length
+    ?'<div class="a120" style="margin-bottom:10px;border-radius:var(--r)">&#128308; '+czUrgentes.length+' item(ns) CZ com estoque ZERO &mdash; reposi\u00e7\u00e3o imediata</div>':'' ;
+
+  document.getElementById('sugBody').innerHTML=czAviso
+    +renderSugList(comprar,'verde','&#9989; Comprar agora')
     +renderSugList(moderado,'am','&#9888;&#65039; Comprar moderado')
     +renderSugList(evitar,'verm','&#10060; Evitar / aguardar');
 }
